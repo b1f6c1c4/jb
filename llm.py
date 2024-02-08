@@ -1,21 +1,20 @@
 #!/usr/bin/env python
 
-import psycopg
-from tqdm import trange, tqdm
-from transformers import AutoModelForCausalLM, T5ForConditionalGeneration, AutoTokenizer
-import torch
 import sys
 
 if len(sys.argv) not in [3,4]:
     print(f'Usage: {sys.argv[0]} [process|monitor|job_link] postgresql://[username]:[password]@[host]:[port]/[database] [-n]')
     sys.exit(1)
 
+import psycopg
+from tqdm import trange, tqdm
+from transformers import AutoModelForCausalLM, T5ForConditionalGeneration, AutoTokenizer
+import torch
+
 model = T5ForConditionalGeneration.from_pretrained("google/flan-ul2", device_map="cuda:0", torch_dtype=torch.bfloat16, load_in_4bit=True)
 tokenizer = AutoTokenizer.from_pretrained("google/flan-ul2")
 
 def get_fields(conn):
-    return [('ai_year','smallint','How many years of experiences does the job require? Answer a number only.')]
-
     with conn.cursor() as cur:
         cur.execute("""
 SELECT a.attname as fld,
@@ -45,13 +44,13 @@ def process_single(triple,job_link,job_description):
             res = results[0].strip().lower() == "yes"
         else:
             res = int(float(results[0].split(' ')[0]))
-        return f"UPDATE jobs SET {fld} = %s WHERE job_link = %s", (res,job_link)
+        return f"UPDATE jobs SET {fld} = %s, mtime = CURRENT_TIMESTAMP WHERE job_link = %s", (res,job_link)
     except KeyboardInterrupt:
         sys.exit(130)
     except Exception as e:
         print(f'[{fld}] {job_link} [error]')
         print(e)
-        return "UPDATE jobs SET ai_fail = (%s || ',' || ai_fail) WHERE job_link = %s", (fld,job_link)
+        return "UPDATE jobs SET ai_fail = (%s || ',' || ai_fail), mtime = CURRENT_TIMESTAMP WHERE job_link = %s", (fld,job_link)
 
 def execute(cur, obj):
     if len(sys.argv) == 4:
@@ -71,11 +70,14 @@ def process_one(conn,job_link):
                 print(f'[{job_link}] updated [{fld}]')
 
 def process_all(conn):
+    flag = False
     for triple in get_fields(conn):
         fld = triple[0]
         with conn.cursor() as cur:
             cur.execute(f"SELECT COUNT(*) FROM jobs WHERE {fld} IS NULL AND (ai_fail !~ '(?<![a-z_]){fld}(?![a-z_])')")
             total = cur.fetchone()[0]
+        if total == 0:
+            continue
         print(f'[[[[{fld}]]]]')
         with tqdm(total=total) as pbar:
             while True:
@@ -84,6 +86,7 @@ def process_all(conn):
                     updates = [process_single(triple,jl,jd) for jl,jd in cur]
                     if len(updates) == 0:
                         break
+                    flag = True
                     for u in updates:
                         execute(cur, u)
                 pbar.update(len(updates))
@@ -92,7 +95,8 @@ with psycopg.connect(sys.argv[2], autocommit=True) as conn:
     if sys.argv[1] not in ['process','monitor']:
         process_one(conn, sys.argv[1])
     else:
-        process_all(conn)
+        while process_all(conn):
+            pass
         if sys.argv[1] == 'monitor':
             print('\n\n')
             print('Listening on <jobs> ...')
