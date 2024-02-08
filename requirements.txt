@@ -1,0 +1,10 @@
+psycopg[binary,pool]
+elasticsearch
+selenium
+pandas
+webdriver_manager
+tqdm
+transformers
+torch
+accelerate
+bitsandbytes
