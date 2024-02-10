@@ -1,0 +1,19 @@
+{
+  "name": "jb",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "dependencies": {
+    "ace-builds": "^1.32.6",
+    "dot": "^1.1.3",
+    "lato-font": "^3.0.0",
+    "mime": "^4.0.1",
+    "pg": "^8.11.3"
+  }
+}
