@@ -1,0 +1,135 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
+body {
+  display: flex;
+  align-items: stretch;
+}
+aside {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 420px;
+}
+aside, aside > input {
+  background-color: #ddd;
+  border: 0;
+  color: gray;
+  font-family: Consolas, Monospace;
+  font-size: 12pt;
+}
+main, #editor {
+  flex: 1;
+}
+.counter {
+  position: relative;
+  background-color: #ccc;
+  font-family: Consolas, Monospace;
+  font-size: 24pt;
+  text-align: center;
+}
+.mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+}
+#mask1 {
+  background-color: #444;
+}
+#mask2 {
+  background-color: #4a4;
+  width: 0%;
+}
+#mask3 {
+  background-color: #cc2;
+  width: 0%;
+}
+#counter {
+  display: block;
+  margin: 1em;
+  color: white;
+  mix-blend-mode: difference;
+}
+main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  gap: 0.5em;
+}
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
+.scroller {
+  overflow-y: scroll;
+  flex: 1;
+  text-align: initial;
+}
+.scroller:focus {
+  outline: none;
+}
+article {
+  max-width: 720px;
+  margin: 0 auto;
+  font-family: Lato, Serif;
+  font-size: 14pt;
+}
+.flt {
+  padding: 1.5em;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 1.0em;
+  top: 0;
+  height: calc(100% - 3em);
+  flex-wrap: wrap-reverse;
+}
+.flt-bottom {
+  top: inherit;
+  bottom: 0;
+}
+.flt div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 5em;
+  height: 5em;
+  border-radius: 100%;
+}
+.flt span:first-child {
+  font-family: Consolas, Monospace;
+  font-size: 1.5em;
+  font-weight: bold;
+}
+.flt span + span {
+  font-family: Lato, Serif;
+}
+.flt-left {
+  left: 0;
+}
+.flt-left div {
+  background-color: #7f7;
+}
+.flt-right {
+  right: 0;
+}
+.flt-right div {
+  background-color: #f77;
+}
+.good {
+  border: 8px #7f7 solid;
+}
+.bad {
+  border: 8px #f77 solid;
+}
+.applied {
+  border: 8px #882 solid;
+}
