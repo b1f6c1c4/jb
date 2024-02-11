@@ -16,8 +16,17 @@ const mask3 = document.getElementById('mask3');
 const main = document.getElementById('main');
 let job_link, last_job_link;
 const doExecute = async () => {
-  const sql = editor.getValue();
+  let sql = editor.getValue();
   window.localStorage.setItem('editor', sql);
+  sql = sql.replace(/<('(?:[^']|'')*')>/g, `
+    (to_tsvector('english',
+       coalesce(job_title, '') || ' '  ||
+       coalesce(organization_name, '') || ' '  ||
+       coalesce(location, '') || ' '  ||
+       coalesce(job_function, '') || ' '  ||
+       coalesce(industries, '') || ' '  ||
+       coalesce(searched_keyword, '') || ' '  ||
+       coalesce(job_description, '')) @@ to_tsquery($1))`);
   const headers = new Headers();
   headers.set('Content-Type', 'application/json')
   try {
@@ -37,7 +46,7 @@ const doExecute = async () => {
     job_link = link;
     main.innerHTML = html;
     const scroller = document.querySelector('.scroller');
-    scroller.focus();
+    scroller && scroller.focus();
   } catch (e) {
     main.innerText = e;
     console.error(e);
@@ -92,5 +101,21 @@ document.addEventListener('keydown', (event) => {
 
 (async () => {
   const fields = document.getElementById('fields');
-  fields.innerHTML = await (await fetch('/fields', { credentials: 'include' })).text();
+  fields.innerHTML = (await (await fetch('/fields', { credentials: 'include' })).text())
+    + '<span title="Full text search">&lt;\'*\'&gt;</span>';
+  let md;
+  for (const sp of document.querySelectorAll('#fields span')) {
+    sp.addEventListener('mousedown', (event) => { md = event.target; });
+    sp.addEventListener('mouseup', (event) => {
+      if (event.target !== md) return;
+      editor.insert(md.innerText);
+      editor.focus();
+      if (md.innerText === "<'*'>") {
+        editor.selection.moveCursorLeft();
+        editor.selection.moveCursorLeft();
+        editor.selection.clearSelection();
+        editor.selection.selectLeft();
+      }
+    });
+  }
 })();
