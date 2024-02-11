@@ -55,10 +55,19 @@ editor.commands.addCommands([{
 
 const doSave = async (v) => {
   const headers = new Headers();
-  headers.set('Content-Type', 'application/json')
+  await fetch(`/job?id=${encodeURIComponent(job_link)}&v=${v}`, {
+    method: 'PUT',
+    headers,
+    credentials: 'include',
+  });
+  main.innerHTML = '';
+  await doExecute();
+};
+
+const doUnsave = async () => {
+  const headers = new Headers();
   await fetch(`/job?id=${encodeURIComponent(job_link)}`, {
-    method: v === undefined ? 'DELETE' : 'PUT',
-    body: v === undefined ? undefined : ''+v,
+    method: 'DELETE',
     headers,
     credentials: 'include',
   });
@@ -70,7 +79,7 @@ document.addEventListener('keydown', (event) => {
   switch (event.key) {
     case 'F8':
       job_link = last_job_link;
-      doSave(undefined);
+      doUnsave();
       break;
     case 'F8':
       doSave(1);
@@ -80,3 +89,8 @@ document.addEventListener('keydown', (event) => {
       break;
   }
 });
+
+(async () => {
+  const fields = document.getElementById('fields');
+  fields.innerHTML = await (await fetch('/fields', { credentials: 'include' })).text();
+})();

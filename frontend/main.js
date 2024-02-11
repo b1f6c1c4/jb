@@ -3,6 +3,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import { Buffer } from 'node:buffer';
 import doT from 'dot';
+import encodeHTML from 'dot/encodeHTML.js';
 import path from 'node:path';
 import mime from 'mime';
 import { fileURLToPath } from 'node:url';
@@ -57,6 +58,9 @@ const tmpl = doT.template(`
         <article class="{{=it.class}}">{{=it.job_description}}</article>
     </div>
 `);
+const flds = doT.template(`
+{{~it:x}}<span title="{{=x.ty}}: {{!x.cmt}}">{{=x.fld}}</span>{{~}}
+`, { encoders: {'': encodeHTML()} });
 
 function auth(req, res, cb) {
   if (req && /^Basic /.test(req.headers.authorization)) {
@@ -131,6 +135,25 @@ const server = http.createServer({
     try {
       await client.connect();
       switch (url.pathname) {
+        case '/fields':
+          if (req.method !== 'GET') {
+              res.writeHead(405).end();
+              break;
+          }
+          const { rows } = await client.query(`
+            SELECT a.attname as fld,
+              pg_catalog.format_type(a.atttypid, a.atttypmod) as ty,
+              COALESCE(pg_catalog.col_description(a.attrelid, a.attnum), '') as cmt
+            FROM pg_catalog.pg_attribute a
+            WHERE a.attrelid = (SELECT oid FROM pg_class WHERE relname = 'jobs')
+              AND a.attnum > 0 AND NOT a.attisdropped
+              AND a.attname != 'ai_fail'
+            ORDER BY a.attnum;`);
+          res.writeHead(200, {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-store',
+          }).end(flds(rows));
+          break;
         case '/job':
           switch (req.method) {
             case 'GET':

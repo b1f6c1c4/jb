@@ -133,3 +133,13 @@ article {
 .applied {
   border: 8px #882 solid;
 }
+#fields {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 1px 1em;
+  justify-content: center;
+}
+#fields span {
+  display: block;
+}
