@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const tmpl = doT.template(`
     <div class="flt flt-left">
-        {{? it.ai_consult }}<div><span>Con</span></div>{{?}}
+        {{? it.ai_consult }}<div><span>Cnslt</span></div>{{?}}
         {{? it.ai_cs }}<div><span>CS</span></div>{{?}}
         {{? it.ai_ee }}<div><span>EE</span></div>{{?}}
         {{? it.ai_hard < 5 }}<div><span>EZ</span><span>{{=it.ai_hard}}</span></div>{{?}}
@@ -43,7 +43,8 @@ const tmpl = doT.template(`
         {{? it.ai_comp > 6 }}<div><span>Cptv</span><span>{{=it.ai_comp}}</span></div>{{?}}
         {{? it.ai_boring <= 3 }}<div><span>Bore</span><span>{{=it.ai_boring}}</span></div>{{?}}
     </div>
-    <h4>{{=it.source}}/{{=it.industries}}/{{=it.job_function}}</h4>
+    <h5>{{=it.atime}}/{{=it.source}}</h5>
+    <h4>{{=it.industries}}/{{=it.job_function}}</h4>
     <h1><a href="{{=it.job_link}}">{{=it.job_title}}</a></h1>
     <h2 class="{{=it.class}}">
         {{=it.organization_name}}
@@ -164,6 +165,7 @@ const server = http.createServer({
                 break;
               }
               const sql = url.searchParams.get('q');
+              const skip = +(url.searchParams.get('s') || 0);
               const counts = (await client.query(`
                 SELECT
                   COUNT(*) AS total,
@@ -178,18 +180,22 @@ const server = http.createServer({
               if (counts.proc - counts.total)
                 where = `good_${user} IS NULL`; // find unprocessed ones first
               else if (counts.applied - counts.good)
-                where = `applied_${user} IS NULL`; // find unapplied ones then
+                where = `applied_${user} = FALSE`; // find unapplied ones then
               else
                 where = 'TRUE';
               const ans = await client.query(`
-                SELECT * FROM (${sql})
-                WHERE ${where} LIMIT 1`);
+                WITH a AS MATERIALIZED (
+                  SELECT * FROM (${sql})
+                  WHERE ${where}
+                )
+                SELECT * FROM a
+                LIMIT 1 OFFSET $1::int`, [skip]);
               const link = ans.rowCount ? ans.rows[0].job_link : undefined;
               const html = ans.rowCount ? tmpl({
                 ...ans.rows[0],
                 class: cls(ans.rows[0], user),
-              }) :
-                counts.total ? '<h1>All done!</h1>' : '<h1>No match</h1>';
+                atime: ans.rows[0].atime?.toISOString(),
+              }) : counts.total ? '<h1>All done!</h1>' : '<h1>No match</h1>';
               res.writeHead(200, {
                 'Content-Type': 'application/json',
                 'Cache-Control': 'no-store',

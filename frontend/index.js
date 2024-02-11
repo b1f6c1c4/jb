@@ -14,14 +14,15 @@ const mask1 = document.getElementById('mask1');
 const mask2 = document.getElementById('mask2');
 const mask3 = document.getElementById('mask3');
 const undo = document.getElementById('undo');
-const applied = document.getElementById('applied');
+const skipper = document.getElementById('skip');
+const applier = document.getElementById('applied');
 const main = document.getElementById('main');
 
 let processing;
 const fetching = async (url, opt) => {
   processing = true;
   undo.disabled = true;
-  applied.disabled = true;
+  applier.disabled = true;
   editor.readOnly = true;
   document.body.style.cursor = 'wait';
   const res = await fetch(url, opt);
@@ -32,9 +33,15 @@ const fetching = async (url, opt) => {
 };
 
 let job_link, last_job_link;
+let last_sql;
+let skip = 0;
 const doExecute = async () => {
   let sql = editor.getValue();
-  window.localStorage.setItem('editor', sql);
+  if (last_sql !== sql) {
+    window.localStorage.setItem('editor', sql);
+    last_sql = sql;
+    skip = 0;
+  }
   sql = sql.replace(/<('(?:[^']|'')*')>/g, `
     (to_tsvector('english',
        coalesce(job_title, '') || ' '  ||
@@ -47,7 +54,7 @@ const doExecute = async () => {
   const headers = new Headers();
   headers.set('Content-Type', 'application/json')
   try {
-    const result = await fetching(`/job?q=${encodeURIComponent(sql)}`, {
+    const result = await fetching(`/job?q=${encodeURIComponent(sql)}&s=${skip}`, {
       method: 'GET',
       headers,
       credentials: 'include',
@@ -67,7 +74,11 @@ const doExecute = async () => {
     if (job_link) {
       const scroller = document.querySelector('.scroller');
       scroller.focus();
-      applied.disabled = false;
+      applier.disabled = false;
+      if (skip !== 0)
+        skipper.innerText = skip;
+      else
+        skipper.innerText = '';
     }
   } catch (e) {
     main.innerText = e;
@@ -131,6 +142,16 @@ document.addEventListener('keydown', (event) => {
       break;
     case 'F9':
       doSave(0);
+      break;
+    case 'ArrowLeft':
+      if (skip > 0) {
+        skip--;
+        doExecute();
+      }
+      break;
+    case 'ArrowRight':
+      skip++;
+      doExecute();
       break;
   }
 });
