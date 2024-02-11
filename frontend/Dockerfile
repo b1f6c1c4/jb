@@ -1,5 +1,15 @@
 FROM node:bullseye
 
-EXPOSE 8080
+RUN mkdir /app
 
-CMD node -e 'console.log("hello world")'
+COPY package.json package-lock.json /app
+
+WORKDIR /app
+
+RUN npm ci
+
+COPY . /app
+
+CMD ["/usr/local/bin/node", "/app/main.js"]
+
+EXPOSE 8800

@@ -148,6 +148,8 @@ const server = http.createServer({
             WHERE a.attrelid = (SELECT oid FROM pg_class WHERE relname = 'jobs')
               AND a.attnum > 0 AND NOT a.attisdropped
               AND a.attname != 'ai_fail'
+              AND ((a.attname !~ 'good_.*' AND a.attname !~ 'applied_.*')
+                OR a.attname ~ '.*_${user}')
             ORDER BY a.attnum;`);
           res.writeHead(200, {
             'Content-Type': 'text/html',
@@ -199,8 +201,21 @@ const server = http.createServer({
                 break;
               }
               const id = url.searchParams.get('id');
-              const v = !!+url.searchParams.get('v');
-              await client.query(`UPDATE jobs SET good_${user} = $1::boolean WHERE job_link = $2::text`, [v, id]);
+              const v = url.searchParams.get('v');
+              if (v == 0 || v == 1)
+                await client.query(`
+                  UPDATE jobs
+                  SET good_${user} = $1::boolean
+                  WHERE job_link = $2::text`, [+v, id]);
+              else if (v == 2)
+                await client.query(`
+                  UPDATE jobs
+                  SET good_${user} = TRUE, applied_${user} = TRUE
+                  WHERE job_link = $1::text`, [id]);
+              else {
+                res.writeHead(400).end();
+                break;
+              }
               res.writeHead(204).end();
               break;
             case 'DELETE':
@@ -210,7 +225,7 @@ const server = http.createServer({
               }
               await client.query(`
                 UPDATE jobs
-                SET good_${user} = NULL, applied_${user} = NULL
+                SET good_${user} = NULL, applied_${user} = FALSE
                 WHERE job_link = $1::text
               `, [url.searchParams.get('id')]);
               res.writeHead(204).end();

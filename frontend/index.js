@@ -13,7 +13,24 @@ const counter = document.getElementById('counter');
 const mask1 = document.getElementById('mask1');
 const mask2 = document.getElementById('mask2');
 const mask3 = document.getElementById('mask3');
+const undo = document.getElementById('undo');
+const applied = document.getElementById('applied');
 const main = document.getElementById('main');
+
+let processing;
+const fetching = async (url, opt) => {
+  processing = true;
+  undo.disabled = true;
+  applied.disabled = true;
+  editor.readOnly = true;
+  document.body.style.cursor = 'wait';
+  const res = await fetch(url, opt);
+  processing = false;
+  editor.readOnly = false;
+  document.body.style.cursor = '';
+  return res;
+};
+
 let job_link, last_job_link;
 const doExecute = async () => {
   let sql = editor.getValue();
@@ -30,7 +47,7 @@ const doExecute = async () => {
   const headers = new Headers();
   headers.set('Content-Type', 'application/json')
   try {
-    const result = await fetch(`/job?q=${encodeURIComponent(sql)}`, {
+    const result = await fetching(`/job?q=${encodeURIComponent(sql)}`, {
       method: 'GET',
       headers,
       credentials: 'include',
@@ -43,10 +60,15 @@ const doExecute = async () => {
     mask3.style.width = `${applied/total*100}%`;
     counter.innerText = `${applied}/${good}/${proc}/${total}`;
     last_job_link = job_link;
-    job_link = link;
+    if (last_job_link)
+      undo.disabled = false;
     main.innerHTML = html;
-    const scroller = document.querySelector('.scroller');
-    scroller && scroller.focus();
+    job_link = link;
+    if (job_link) {
+      const scroller = document.querySelector('.scroller');
+      scroller.focus();
+      applied.disabled = false;
+    }
   } catch (e) {
     main.innerText = e;
     console.error(e);
@@ -59,12 +81,17 @@ editor.commands.addCommands([{
   name: 'execute',
   bindKey: 'Ctrl-Enter',
   exec: doExecute,
-  readOnly: true,
+  readOnly: false,
+}, {
+  name: 'execute2',
+  bindKey: 'Alt-Enter',
+  exec: doExecute,
+  readOnly: false,
 }]);
 
 const doSave = async (v) => {
   const headers = new Headers();
-  await fetch(`/job?id=${encodeURIComponent(job_link)}&v=${v}`, {
+  await fetching(`/job?id=${encodeURIComponent(job_link)}&v=${v}`, {
     method: 'PUT',
     headers,
     credentials: 'include',
@@ -73,23 +100,32 @@ const doSave = async (v) => {
   await doExecute();
 };
 
-const doUnsave = async () => {
-  const headers = new Headers();
-  await fetch(`/job?id=${encodeURIComponent(job_link)}`, {
+undo.addEventListener('click', async () => {
+  await fetching(`/job?id=${encodeURIComponent(last_job_link)}`, {
     method: 'DELETE',
+    credentials: 'include',
+  });
+  last_job_link = job_link = undefined;
+  main.innerHTML = '';
+  await doExecute();
+});
+
+applied.addEventListener('click', async () => {
+  const headers = new Headers();
+  job_link = undefined;
+  await fetching(`/job?id=${encodeURIComponent(last_job_link)}&v=2`, {
+    method: 'PUT',
     headers,
     credentials: 'include',
   });
   main.innerHTML = '';
   await doExecute();
-};
+});
 
 document.addEventListener('keydown', (event) => {
+  if (processing)
+    return;
   switch (event.key) {
-    case 'F8':
-      job_link = last_job_link;
-      doUnsave();
-      break;
     case 'F8':
       doSave(1);
       break;

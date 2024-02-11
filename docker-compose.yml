@@ -1,0 +1,27 @@
+version: '3.1'
+services:
+
+  db:
+    image: postgres:bullseye
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: fuckingjobs
+      POSTGRES_DB: job
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - /share/nfsroot/opt/job:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  adminer:
+    image: adminer
+    ports:
+      - 5601:8080
+
+  jb:
+    build: ./frontend
+    image: jb
+    environment:
+      POSTGRES: db
+    ports:
+      - 5602:8800
