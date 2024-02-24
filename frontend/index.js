@@ -123,8 +123,7 @@ undo.addEventListener('click', async () => {
 
 applied.addEventListener('click', async () => {
   const headers = new Headers();
-  job_link = undefined;
-  await fetching(`/job?id=${encodeURIComponent(last_job_link)}&v=2`, {
+  await fetching(`/job?id=${encodeURIComponent(job_link)}&v=2`, {
     method: 'PUT',
     headers,
     credentials: 'include',

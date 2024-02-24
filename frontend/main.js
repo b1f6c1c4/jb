@@ -31,7 +31,7 @@ const tmpl = doT.template(`
         {{? it.ai_startup }}<div><span>S</span></div>{{?}}
         {{? it.ai_mgmt }}<div><span>Mgmt</span></div>{{?}}
         {{? it.ai_labor }}<div><span>Labor</span></div>{{?}}
-        {{? it.ai_customer }}<div><span>C-F</span></div>{{?}}
+        {{? it.ai_customer }}<div><span>Cstmr</span></div>{{?}}
         {{? it.ai_travel }}<div><span>Trvl</span></div>{{?}}
         {{? it.ai_quant }}<div><span>Quant</span></div>{{?}}
         {{? !it.ai_rnd }}<div><span>!R&amp;D</span></div>{{?}}
@@ -39,7 +39,7 @@ const tmpl = doT.template(`
         {{? it.ai_hw < 3 }}<div><span>!HW</span><span>{{=it.ai_hw}}</span></div>{{?}}
         {{? it.ai_sw < 3 }}<div><span>!SW</span><span>{{=it.ai_sw}}</span></div>{{?}}
         {{? it.ai_prog < 3 }}<div><span>!Prog</span><span>{{=it.ai_prog}}</span></div>{{?}}
-        {{? it.ai_year >= 3 }}<div><span>Year</span><span>{{=it.ai_year}}</span></div>{{?}}
+        {{? it.ai_year }}<div><span>Year</span></div>{{?}}
         {{? it.ai_comp > 6 }}<div><span>Cptv</span><span>{{=it.ai_comp}}</span></div>{{?}}
         {{? it.ai_boring <= 3 }}<div><span>Bore</span><span>{{=it.ai_boring}}</span></div>{{?}}
     </div>
@@ -53,6 +53,7 @@ const tmpl = doT.template(`
           <a href="https://www.google.com/maps/place/{{=encodeURIComponent(it.location)}}">
               {{=it.location}}
           </a>
+          ({{=it.commute_time}}min)
         {{?}}
     </h2>
     <div class="scroller" tabindex="0">
@@ -185,7 +186,10 @@ const server = http.createServer({
                 where = 'TRUE';
               const ans = await client.query(`
                 WITH a AS MATERIALIZED (
-                  SELECT * FROM (${sql})
+                  SELECT j.*, round(100*l.distance) AS commute_time
+                  FROM (${sql}) AS j
+                    LEFT OUTER JOIN us_locations AS l
+                    ON trim(BOTH ' 0123456789' FROM j.location) = l.fqdn
                   WHERE ${where}
                 )
                 SELECT * FROM a
