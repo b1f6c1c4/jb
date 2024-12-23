@@ -1,4 +1,28 @@
+const profileFetch = fetch('/profiles').then((res) => res.json());
+
 window.addEventListener('load', async () => {
+  const profileSelect = document.querySelector('select');
+  let profile = window.localStorage.getItem('X-Profile');
+  const profiles = await profileFetch;
+  if (!profiles.includes(profile)) {
+    profile = profiles[0];
+    window.localStorage.setItem('X-Profile', profile);
+  }
+  for (const p of profiles) {
+    const el = document.createElement('option');
+    el.value = p;
+    el.innerText = p;
+    if (p === profile) {
+      el.setAttribute('selected', 'selected');
+    }
+    profileSelect.appendChild(el);
+  }
+
+  profileSelect.addEventListener('change', (e) => {
+    window.localStorage.setItem('X-Profile', e.target.value);
+    window.location.reload();
+  });
+
   const iframe = document.querySelector('iframe');
 
   function recompile() {
@@ -32,11 +56,18 @@ window.addEventListener('load', async () => {
       latex += '\n';
     }
     latex += '\\end{document}';
-    iframe.contentWindow.postMessage(latex);
+    iframe.contentWindow.postMessage({
+      method: 'POST',
+      body: latex,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Profile': profile,
+      }, 
+    });
   }
 
   const projsUl = document.querySelector('section#projs > ul');
-  for (const proj of await (await fetch('/projs')).json()) {
+  for (const proj of await (await fetch('/projs', { headers: { 'X-Profile': profile } })).json()) {
     const el = document.createElement('li');
     el.innerText = proj;
     projsUl.appendChild(el);

@@ -451,11 +451,7 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
     </div>
     <script>
       window.addEventListener('message', async (event) => {
-        const resp = await fetch('/pdf', {
-          method: 'POST',
-          body: event.data,
-          headers: { 'Content-Type': 'text/plain' },
-        });
+        const resp = await fetch('/pdf', event.data);
         const style = document.getElementById('error-wrapper').style;
         const pre = document.getElementById('error-overlay');
         style.visibility = 'visible';
@@ -469,7 +465,6 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
             doc._pdfInfo.fingerprint = 'constantFingerprint';
             doc._pdfInfo.fingerprints = ['constantFingerprint'];
             PDFViewerApplication.load(doc);
-            PDFViewerApplication.setTitle(title);
           });
         } else if (resp.status === 422) {
           style.color = '#ee3';

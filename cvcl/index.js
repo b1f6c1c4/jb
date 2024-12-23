@@ -7,11 +7,8 @@ const util = require('node:util');
 const exec = util.promisify(require('node:child_process').exec);
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-(async function() {
-  const [apiKey, rawPortfolio] = await Promise.all([
-    fs.readFile(path.join(__dirname, '.env'), 'utf8'),
-    fs.readFile(path.join(__dirname, 'data', 'portfolio.tex'), 'utf8'),
-  ]);
+async function parsePortfolio(fn) {
+  const rawPortfolio = await fs.readFile(path.join(__dirname, 'data', fn), 'utf8');
   const projs = [...rawPortfolio.match(/(?<=\\def)\\p[a-zA-z]+/g)];
   let projsDescription = '';
   for (const proj of projs) {
@@ -23,6 +20,25 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
       .replace(/\\g?hhref\{[^}]*\}/, '').trim();
     projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
   }
+  return {
+    projs,
+    rawPortfolio,
+  };
+}
+
+function findProfile(req, res, next) {
+  parsePortfolio(req.get('X-Profile')).then((obj) => {
+    req.profile = obj;
+    next();
+  }).catch((err) => {
+    res.status(400).send('X-Profile not set');
+  });
+}
+
+(async function() {
+  const [apiKey] = await Promise.all([
+    fs.readFile(path.join(__dirname, '.env'), 'utf8'),
+  ]);
 
   const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -32,11 +48,15 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
   app.use(express.static(path.join(__dirname, 'public')));
   app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
-  app.get('/projs', (req, res) => {
-    res.json(projs);
+  app.get('/profiles', async (req, res) => {
+    res.json(await fs.readdir(path.join(__dirname, 'data')));
   });
 
-  app.post('/projs', bodyParser.text(), async (req, res) => {
+  app.get('/projs', findProfile, (req, res) => {
+    res.json(req.profile.projs);
+  });
+
+  app.post('/projs', findProfile, bodyParser.text(), async (req, res) => {
     const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given the job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
 
 #### BEGIN JOB DESCRIPTION ####
@@ -44,7 +64,7 @@ ${req.body}
 #### END JOB DESCRIPTION ####
 
 #### BEGIN PORTFOLIO ####
-${projsDescription}
+${req.profile.projsDescription}
 #### END PORTFOLIO ####
 
 #### BEGIN OUTPUT ####
@@ -54,13 +74,13 @@ ${projsDescription}
     const recommendation = [];
     for (const rr of txt.trim().split('\n')) {
       const r = rr.trim().replace(/^`|`$/, '');
-      if (projs.includes(r))
+      if (req.profile.projs.includes(r))
         recommendation.push(r);
     }
     res.json(recommendation);
   });
 
-  app.post('/pdf', bodyParser.urlencoded(), bodyParser.text(), async (req, res) => {
+  app.post('/pdf', findProfile, bodyParser.urlencoded(), bodyParser.text(), async (req, res) => {
     if (typeof req.body === 'object' && 'latex' in req.body) {
       req.body = req.body.latex;
     }
@@ -71,7 +91,7 @@ ${projsDescription}
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cvcl-'));
     try {
       await Promise.all([
-        fs.writeFile(path.join(dir, 'portfolio.tex'), rawPortfolio, 'utf8'),
+        fs.writeFile(path.join(dir, 'portfolio.tex'), req.profile.rawPortfolio, 'utf8'),
         fs.writeFile(path.join(dir, 'main.tex'), req.body, 'utf8'),
       ]);
       await exec(
