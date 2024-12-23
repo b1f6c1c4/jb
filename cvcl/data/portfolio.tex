@@ -1,0 +1,450 @@
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[hidelinks]{hyperref}
+\usepackage{engord}
+\usepackage{multicol}
+\usepackage{enumitem}
+\usepackage[usenames]{xcolor}
+\usepackage[margin=0.5in,bottom=0.5in,top=0.4in]{geometry}
+\usepackage{pdfrender}
+\usepackage{fancyhdr}
+\usepackage{fontawesome}
+\usepackage{fontspec}
+\usepackage{titlesec}
+\usepackage{textcomp}
+\setmainfont{Lato}[%
+    Numbers=OldStyle,
+]
+\setmonofont{Inconsolata}[%
+    UprightFont={*-Medium},
+]
+
+\raggedright
+
+\pagenumbering{arabic}
+\setlength{\footskip} {1em}
+\fancypagestyle{plain} {%
+    \fancyhf{}%
+    \fancyfoot[C]{--~\thepage~--}%
+    \renewcommand{\headrulewidth} {0pt}%
+    \renewcommand{\footrulewidth} {0pt}%
+}
+
+\titleformat{\section} {\fontsize{12pt}{12pt}\selectfont}{}{0pt}{}[\vspace{0pt}\titlerule]
+\titlespacing*{\section} {0pt}{8pt}{4pt}
+
+\newcommand{\jobexp}[5]{
+\textbf{#4}, \href{#5} {#1} -- {#2} \hfill {#3}
+\vspace{-2pt}
+}
+
+\newcommand{\techexp}[5]{
+\textbf{#4}, {#2} \hfill {#3}\par
+}
+
+\newcommand{\skill}[1]{%
+\ {\small(#1)}}
+
+\newcommand{\project}[3]{
+\textbf{#1} \hfill {#3}
+\vspace{-2pt}
+}
+
+\newcommand{\hhref}[2]{%
+\href{#1} {\color{darkgray}\small(#2 {\footnotesize\faExternalLink})}%
+}
+
+\newcommand{\ghhref}[1]{%
+\hhref{#1} {GitHub}%
+}
+
+\newcommand{\labelproj} {$\vcenter{\hbox{\small$\bullet$}}$}
+\newenvironment{projdetails} {%
+\begin{list} {}{
+    \renewcommand{\makelabel} {\labelproj}%
+    % labelwidth + labelsep = itemindent + leftmargin
+    \setlength{\leftmargin} {9pt}%
+    \setlength{\labelwidth} {3.84pt}%
+    \setlength{\labelsep} {3.0pt}%
+    \setlength{\itemindent} {-1.4pt}%
+    \setlength{\topsep} {3pt}%
+    \setlength{\listparindent} {0.0pt}%
+    \setlength{\itemsep} {0pt}%
+    \setlength{\parsep} {1pt}%
+}%
+} {%
+\end{list}
+}
+
+\newcommand{\labelpub} {$\vcenter{\hbox{\small--}}$}
+\newenvironment{pubdetails} {%
+\begin{list} {}{\footnotesize
+    \renewcommand{\makelabel} {\labelpub}%
+    % labelwidth + labelsep = itemindent + leftmargin
+    \setlength{\leftmargin} {9pt}%
+    \setlength{\labelwidth} {3.84pt}%
+    \setlength{\labelsep} {3.0pt}%
+    \setlength{\itemindent} {-1.4pt}%
+    \setlength{\topsep} {3pt}%
+    \setlength{\listparindent} {0.0pt}%
+    \setlength{\itemsep} {0pt}%
+    \setlength{\parsep} {1pt}%
+}%
+} {%
+\end{list}
+}
+
+\newcommand{\subpublication}[1]{
+\vspace{-0.2pt}
+\quad {\color{darkgray} \small \texttt{#1}}
+\vspace{1pt}
+}
+
+\def\sLanguageTech{%
+\textbf{Languages:}\,\skill{8--15 years of} C, \liningnums{C++}, Verilog, JavaScript, \liningnums{C\#}, CSS. \quad
+\textbf{Tech:} Docker, Git, React, MongoDB, Boost.
+\par}
+
+\def\sLanguageSoftware{%
+\textbf{Languages:}\,\skill{3--5 years of} bash, Python, Haskell. \quad
+\textbf{Software:} Matlab, Vivado, Synopsys DC, KiCAD, LTSpice.
+\par}
+
+\def\sSoftware{%
+\textbf{Software:} Matlab, Vivado, Synopsys DC, FreeCAD, KiCAD, Simulink, \liningnums{gem5}, ANSYS, LTSpice.
+\par}
+
+\def\sHardware{%
+\textbf{Hardware:} Oscilloscopes, PCB Soldering, Xilinx FPGA, Raspberry Pi, Arduino, FDM \liningnums{3D} Printing.
+\par}
+
+\def\sMath{%
+\textbf{Applied Math:} numerical methods, linear algebra, real analysis, computational geometry, statistics.
+\par}
+
+\def\eMousica{%
+\jobexp{Mousica Foundation} {Framingham, MA}{Sept 2023 -- Present}
+{Founder, Electrical Engineer} {https://mousica.foundation/}
+\begin{projdetails}
+    \item Self-funded, prototyping-stage startup exploring innovative electro-acoustic musical instruments
+    \item Drafted a FreeCAD plugin to visualize and work with rigid body \liningnums{SO(3)} kinetics (DoF vs. constraints) using screw theory, SVD decomposition, and other advanced linear algebra / computational geometry techniques.
+    \item Designed, assembled, and tested medium-density PCBs to drive piezoelectric actuators with Arduino
+    \item Analyzed, modeled, and FDM-\liningnums{3D} printed several musical instrument parts with Nylon-CF6 in FreeCAD
+\end{projdetails}
+}
+\def\eMousicaShort{%
+\jobexp{Mousica Foundation} {Framingham, MA}{Sept 2023 -- Present}
+{Founder, Electrical Engineer} {https://mousica.foundation/}
+\begin{projdetails}
+    \item Self-funded, prototyping-stage startup exploring innovative electro-acoustic musical instruments
+\end{projdetails}
+}
+
+\def\eNBL{%
+\jobexp{Nokia Bell Labs} {Murray Hill, NJ}{June -- Aug 2023}
+{Platform \& ASIC Research Intern} {https://www.bell-labs.com/about/researcher-profiles/hkchow/}
+\begin{projdetails}
+    \item Quantified ResNet execution time in cycles on the team's in-house built SRAM compute-in-memory hardware
+    \item Improved the SRAM device's programmability by introducing a RISC-V ISA extension
+    \item Ensured \liningnums{100\%} utilization of specialized SRAM devices by adding micro-architectural pipelines
+    \item Mapped ResNet workload onto the ASIP for efficient computation of AI-based \liningnums{6G} wireless radio receiver
+\end{projdetails}
+}
+
+\def\eNBLShort{%
+\jobexp{Nokia Bell Labs} {Murray Hill, NJ}{June -- Aug 2023}
+{Platform \& ASIC Research Intern} {https://www.bell-labs.com/about/researcher-profiles/hkchow/}
+\begin{projdetails}
+    \item Ensured \liningnums{100\%} utilization of specialized SRAM devices by adding micro-architectural pipelines
+    \item Mapped ResNet workload onto the processor for efficient computation of AI-based \liningnums{6G} wireless radio receiver
+\end{projdetails}
+}
+
+\def\exRAcxx{%
+    \item Hacked LLVM and Yosys, connecting it to my 10,000-line C++23 program to synthesize, optimize, and verify non-traditional logic gates and circuits for in-memory computing research purposes
+    \item Repurposed LLVM source code of RISC-V target to generate in-memory computing workloads
+    \item Implemented a memory controller on FPGA mixing 6,000+ lines of low-level C and Verilog to best capture the behavior of actual DIMM memories, with \texttt{LD\_PRELOAD} injection for a proof-of-concept demo
+    \item Mastered and coached others on the advanced use of Git, including complex rebase and submodules
+    \item Verified, taped out, and tested multiple large-scale SoC chips with internal and external collaboration
+}
+\def\exRAshort{%
+    \item Hacked LLVM and Yosys, connecting it to my 10,000-line C++23 program to synthesize, optimize, and verify non-traditional logic gates and circuits for in-memory computing research purposes
+    \item Implemented a memory controller on FPGA mixing 6,000+ lines of low-level C and Verilog to best capture the behavior of actual DIMM memories, with \texttt{LD\_PRELOAD} injection for a proof-of-concept demo
+    \item Verified, taped out, and tested multiple large-scale SoC chips with internal and external collaboration
+    \item Mastered and coached others on the advanced use of Git, including complex rebase and submodules
+}
+\def\eRA{%
+\jobexp{Princeton University} {Princeton, NJ}{Aug 2018 -- May 2023}
+{Research Assistant} {https://parallel.princeton.edu/pubs.html}
+}
+
+\def\eVT{%
+\jobexp{Virginia Tech - CPES} {Blacksburg, VA}{June -- Sept 2017}
+{Student Intern} {https://cpes.vt.edu/}
+\begin{projdetails}
+    \item Learned the theory and practice of wireless power transfer (WPT) in short time
+    \item Investigated the transmitter coils design problem for omnidirectional WPT for portable devices application
+    \item Proposed innovative coil shape design using Matlab and genetic algorithm
+\end{projdetails}
+}
+
+\def\pOoo{%
+\project{7-stage out-of-order \liningnums{(IO2I)} quintuple-issue superscalar CPU with \liningnums{RISC-V 32bit} ISA} {Dec 2018 -- Jan 2019}
+{\hhref{https://drive.google.com/file/d/1QrhnR8GHz_nTokklfwnP03zTq4gWqAwC/view?usp=sharing}{Report}}
+\begin{projdetails}
+    \item Explored micro-architectures in an existing dual-fetch superscalar CPU seeking IPC performance breakthrough
+    \item Implemented $\mu$-op issue queues, reorder buffers, and additional issue/execution units and pipeline stages
+    \item Achieved the IPC of 1.83 (27--560\% improvement), the highest in the history of Princeton
+\end{projdetails}}
+
+\def\pAzurecho{%
+\project{5-stage in-order 16-bit pipelined CPU with simplified MIPS instruction set on FPGA} {Nov 2016}
+{\ghhref{https://github.com/b1f6c1c4/azCPU}}
+\begin{projdetails}
+    \item Contained IF, ID, EXE, MEM, and WB stages
+    \item Mixed VHDL \& SystemVerilog for design \& verification
+    \item Wrote scripts to automate the testing process
+\end{projdetails}}
+
+\def\pCpu{%
+\project{Single cycle 8-bit CPU on FPGA, with assembler, simulator, debugger, and IDE} {Sept -- Oct 2016}
+{\ghhref{https://github.com/b1f6c1c4/CPU}}
+\begin{projdetails}
+    \item Supported 18 instructions with 4 registers, plus 7 virtual instructions
+    \item Enabled software-based function call/stack and memory-mapped IO
+    \item Developed a C\#-based object-oriented IDE built from scratch
+    \item Appreciated by all 140 junior students that year by open-sourcing the IDE
+\end{projdetails}}
+
+\def\pCifer{%
+\project{CIFER: A 12nm, 16mm$^2$, 22-Core SoC with an Embedded FPGA} {July 2020 -- Apr 2022}
+{\ghhref{https://github.com/PrincetonUniversity/openpiton}}
+\begin{projdetails}
+    \item Scrutinized the Verilog code integrated for its \liningnums{0.1-4GHz} on-chip oscillator provided by an external collaborator
+    \item Delivered PnR results under a tight deadline using Synopsys tools and bash/Python/Perl scripts during tape-out
+\end{projdetails}}
+
+\def\pDecades{%
+\project{DECADES: A 12nm, 67mm$^2$, Manycore SoC with 109 Tiles} {Nov 2020 -- Aug 2022}
+{\ghhref{https://github.com/PrincetonUniversity/openpiton}}
+\begin{projdetails}
+    \item Procured cost-effective oscilloscopes, frequency counters, and multimeters for the chip bring-up process
+    \item Configured the optimal power-on sequence using I$^2$C-interfaced Beagle Bone boards
+    \item Advised other team members of the effective use of lab equipment and test platform
+\end{projdetails}}
+
+\def\pREU{%
+\project{Princeton-Intel Research Experience for Undergrads (REU) Program} {June -- July 2022}
+{}%{\ghhref{https://github.com/b1f6c1c4/Intel-REU-2022}}
+\begin{projdetails}
+    \item Facilitated 8 weeks of close collaboration among a 3-graduate-mentor, 3-sophomore-mentee team on RISC-V Vector ISA research by arranging pair programming, group projects, and socializing events
+    \item Organized, planned, and co-lectured 9 units of crash courses on beginner \& advanced Git, Linux CLI, RISC-V Assembly, and other computer architecture topics with mentees' only prior knowledge being Java
+    \item Researched, compiled, and containerized RISC-V toolchain \& simulator for mentees to use on the HPC cluster
+\end{projdetails}}
+
+\def\pREUShort{%
+\project{Princeton-Intel Research Experience for Undergrads (REU) Program} {June -- July 2022}
+{}%{\ghhref{https://github.com/b1f6c1c4/Intel-REU-2022}}
+\begin{projdetails}
+    \item Facilitated a 3-mentor, 3-mentee team on RISC-V Vector research by lecturing crash courses with R\&D supports
+    \item Researched, compiled, and containerized RISC-V toolchain \& simulator to escort the team from amateurs to feeling confident in developing and testing bare-metal RISC-V Vector programs in 6 weeks on an HPC cluster
+\end{projdetails}}
+
+\def\pDoG{%
+\project{In-memory Computation of RISC-V Vector Programs in Off-the-shelf-DRAM} {Oct 2021 -- Mar 2023}{}
+\begin{projdetails}
+    \item Tracked upstream LLVM RISC-V target's ``V'' extension development and ISA standardization progress
+    \item Troubleshooted multiple LLVM compilation problems (ICEs) by extensive source code reading and Git-bisecting
+    \item Characterized MMIO-system performance using gem5 and modified LLVM TableGen and MCCodeEmitter
+\end{projdetails}}
+
+\def\pLstm{%
+\project{Reproducing and evaluating LSTM combined with Kalman-Filter on NLP datasets} {April -- May 2023}{}
+\begin{projdetails}
+    \item Using PyTorch, established an LSTM model tailored for speech recognition tasks
+    \item Implemented basic Kalman Filter driven by LSTM inputs
+    \item Evaluating model performance on a specific \liningnums{AVEC2019} benchmark
+\end{projdetails}}
+
+\def\pMw{%
+\project{Exploring Efficient Strategies for Minesweeper} {July 2015 -- Feb 2017}{\hhref{https://minesweeper.b1f6c1c4.info/}{Demo} \ghhref{https://github.com/b1f6c1c4/MineSweeperProb}}
+\begin{projdetails}
+    \item Achieved a world-recorded \liningnums{53.4502±0.0098\%} winning rate on an ``advanced''-level Minesweeper game by Gaussian elimination, combinatoric counting with various heuristic optimization algorithms
+    \item Gathered \liningnums{3.5+} billion test results in a very short time by fine-tuning the \liningnums{4000-line} C++ program to \liningnums{<2ms} per game using \texttt{valgrind} and \texttt{gprof}, and deploying the test on hundreds of \liningnums{AVX512}-enabled computers
+\end{projdetails}}
+
+\def\pAcct{%
+\project{Professional Accounting Software} {Sept 2013 -- Present}
+{\ghhref{https://github.com/b1f6c1c4/ProfessionalAccounting}}
+\begin{projdetails}
+    \item Balanced 10+ years of credit card bills, checks, foreign currencies, and many other financial responsibilities by architecturing 18,000+ lines of object-oriented \liningnums{C\#} code with constant refactoring and regular maintenance
+    \item Secured 70k+ personal and business records by enforcing TLS to and from the cloud server to MongoDB Atlas
+    \item Improved users' transaction entry speed to \liningnums{<5s} each by designing intuitive domain-specific languages (DSLs)
+\end{projdetails}}
+
+\def\pAcctShort{%
+\project{Professional Accounting Software} {Sept 2013 -- Present}
+{\ghhref{https://github.com/b1f6c1c4/ProfessionalAccounting}}
+\begin{projdetails}
+    \item Architectured 18,000+ lines of object-oriented \liningnums{C\#} code with constant refactoring and regular maintenance
+    \item Balanced 10+ years of credit card bills, checks, foreign currencies, and many other financial responsibilities
+\end{projdetails}}
+
+\def\pBallot{%
+\project{Anonymous Online Balloting System with Ring Signature Cryptography} {Jan -- Mar 2018}
+{\hhref{https://ballot.b1f6c1c4.info/} {Demo} \ghhref{https://github.com/b1f6c1c4/ballot}}
+\begin{projdetails}
+    \item Architectured 8 microservices of node.js-based backend server and C++-based cryptography middleware
+    \item Solely designed and engineered responsive Web UI with 20,000+ lines of React, Redux, and GraphQL code
+\end{projdetails}}
+
+\def\pPaxos{%
+\project{Reimplementing Egalitarian Paxos using Golang and Docker} {April -- June 2019}
+{\ghhref{https://github.com/yuzeng2333/epaxos}}
+\begin{projdetails}
+    \item Benchmarked E-Paxos algorithm in a simulated environment
+    \item Evaluated network disturbance in containers
+    \item Discussed the impact of networking on algorithm performance
+\end{projdetails}}
+
+\def\pBitonic{%
+\project{Benchmarking Distributed Bitonic Sorting Network} {May -- June 2019}
+{\ghhref{https://github.com/b1f6c1c4/ele585}}
+\begin{projdetails}
+    \item Implemented sorting network based on OpenMPI on Infiniband
+    \item Performed large-scale experiments on a research computing cluster at Princeton University
+    \item Analyzed the impact of architectural features in distributed systems
+\end{projdetails}}
+
+\def\pBgo{%
+\project{Bayesian global optimization (BGO)-based computer-automated design system} {Oct 2017 -- June 2018}
+{\ghhref{https://github.com/b1f6c1c4/ansys-moe}}
+\begin{projdetails}
+    \item Fully automated the FEM design-space exploration of a wireless power transfer system modeled in ANSYS, finding 55 solutions out of 4.76 million possibilities in less than 24h and 265 iterations using BGO optimization
+    \item Attained strong fault tolerance and unlimited parallelization with message queues and a Web-based dashboard
+\end{projdetails}}
+
+\def\pDeep{%
+\project{Deep-DarkFantasy: Screen dark mode by intercepting HDMI signals} {June -- July 2020}
+{\ghhref{https://github.com/b1f6c1c4/Deep-DarkFantasy}}
+\begin{projdetails}
+    \item Streamed \liningnums{1920x1080p60} HDMI 148.50MHz signal into and out of DRAM using Xilinx Zynq FPGA and \liningnums{AXI4}
+    \item Built circuits for high-contrast dark mode with efficient algorithms for comfortable transition in Verilog
+\end{projdetails}}
+
+\def\pCalc{%
+\project{Stack-based 16-bit calculator with scanned keyboard and 7-segment LEDs} {June -- July 2016}
+{\ghhref{https://github.com/b1f6c1c4/Calc}}
+\begin{projdetails}
+    \item Fulfilled the most complex functionalities among sophomores that year
+    \item Saved area and energy cost by trade-off between space and time
+\end{projdetails}}
+
+\def\pSnlib{%
+\project{SNLIB: Sorting-network-based regularity-focused logic synthesis} {Sept -- Oct 2020}
+{\ghhref{https://github.com/b1f6c1c4/sn.lib}}
+\par}
+
+\def\pWifi{%
+\project{Wifi-based intellectual power plug socket} {Nov -- Dec 2016}
+{\ghhref{https://github.com/ritou11/SmartPowerPlug}}
+\par}
+
+\def\pAlarm{%
+\project{Alarming system for valuable objects} {July 2016}
+{\ghhref{https://github.com/b1f6c1c4/AlarmSystem}}
+\par}
+
+\def\pWpt{%
+\project{Transmitter coil design for omnidirectional WPT for portable devices application} {June -- Sept 2017}{}
+\par}
+
+\def\pDc{%
+\project{DC/DC converter with wide input voltage range based on SEPIC topology} {Nov 2015 -- Jan 2016}{}
+\par}
+
+\def\pAcdc{%
+\project{Single-phase PWM AC/DC converter} {Sept 2016 -- Jan 2017}{}
+\par}
+
+\def\sectionEducationPhD{%
+\section{Education}
+\textbf{Northeastern University}, Boston, MA --
+    {Master in Applied Machine Intelligence} \hfill \emph{Expected Dec 2026} \\
+\textbf{Princeton University} --
+    {Ph.D. Electrical and Computer Engineering} \hfill \emph{Incomplete} \\
+\textbf{Princeton University} --
+    {Master in Electrical and Computer Engineering} \liningnums{(GPA: 3.8)} \hfill \emph{Sept 2021} \\
+\textbf{Tsinghua University}, Beijing, China --
+    {Bachelor in Electrical Engineering} \liningnums{(Rank 13/140)} \hfill \emph{June 2018}
+}
+
+\def\sectionEducation{%
+\section{Education}
+\textbf{Northeastern University}, Boston, MA --
+    {Master in Applied Machine Intelligence} \hfill \emph{Expected Dec 2026} \\
+\textbf{Princeton University} --
+    {Master in Electrical and Computer Engineering} \liningnums{(GPA: 3.8)} \hfill \emph{Sept 2021} \\
+\textbf{Tsinghua University}, Beijing, China --
+    {Bachelor in Electrical Engineering} \liningnums{(Rank 13/140)} \hfill \emph{June 2018}
+}
+
+\def\sectionQualifications{%
+\section{Qualifications}
+\textbf{Professional Engineer:}
+\href{https://account.ncees.org/rn/2365029-1607074-f74286f} {Passed} the \textit{FE Electric and Computer} exam; EIT is being processed by the NJ board
+}
+
+\def\sectionPublications{%
+\section{Publications}
+\begin{pubdetails}
+\item A. Li, TJ. Chang, F. Gao, T. Ta, G. Tziantzioulis, Y. Ou, M. Wang, \underline{J. Tu}, K. Xu, P. J. Jackson, A. Ning, G. Chirkov, M. Orenes-Vera, S. Agwa, X. Yan, E. Tang, J. Balkind, C. Batten, and D. Wentzlaff, ``CIFER: A Cache-Coherent 12nm 16mm2 SoC With Four 64-Bit RISC-V Application Cores, 18 32-Bit RISC-V Compute Cores, and a 1541 LUT6/mm2 Synthesizable eFPGA,'' In IEEE Solid-State Circuits Letters, doi: 10.1109/LSSC.2023.3303111
+\item TJ. Chang, A. Li (Equal Contribution), F. Gao, T. Ta, G. Tziantzioulis, Y. Ou, M. Wang, \underline{J. Tu}, K. Xu, P. J. Jackson, A. Ning, G. Chirkov, M. Orenes-Vera, S. Agwa, X. Yan, E. Tang, J. Balkind, C. Batten, and D. Wentzlaff, ``CIFER: A 12nm, 16mm2, 22-Core SoC with a 1541 LUT6/mm2, 1.92 MOPS/LUT, Fully Synthesizable, Cache-Coherent, Embedded FPGA,'' In Proceedings of the 2023 IEEE Custom Integrated Circuits Conference (CICC), April 23-26, 2023, San Antonio, TX, USA\\
+    \subpublication{Taped-out the on-chip oscillating clock generator.}
+\item F. Gao, TJ. Chang, A. Li, M. Orenes-Vera, D. Giri, P. Jackson, A. Ning, G. Tziantzioulis, J. Zuckerman, \underline{J. Tu}, K. Xu, G. Chirkov, G. Tombesi, J. Balkind, M. Martonosi, L. Carloni, and D. Wentzlaff, ``DECADES: A 67mm2, 1.46TOPS, 55 Giga Cache-Coherent 64-bit RISC-V Instructions per second, Heterogeneous Manycore SoC with 109 Tiles including Accelerators, Intelligent Storage, and eFPGA in 12nm FinFET,'' In Proceedings of the 2023 IEEE Custom Integrated Circuits Conference (CICC), April 23-26, 2023, San Antonio, TX, USA (nominated for Best Student Paper)\\
+    \subpublication{Taped-out the on-chip oscillating clock generator.}
+\item G. Tziantzioulis, T. J. Chang, J. Balkind, \underline{J. Tu}, F. Gao, D. Wentzlaff. ``OPDB: A Scalable and Modular Design Benchmark,'' in IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems, vol. 41, no. 6, pp. 1878-1887, 2021.\\
+    \subpublication{Converted SystemVerilog to Verilog using open-source tools.}
+\item J. Balkind, K. Lim, F. Gao, \underline{J. Tu} and D. Wentzlaff, ``OpenPiton+Ariane: The First Open-Source, SMP Linux-booting RISC-V System Scaling From One to Many Cores,'' presented at the Workshops at Third Workshop on Computer Architecture Research with RISC-V (CARRV), Phoenix, AZ, 2019.\\
+    \subpublication{Performed system testing on FPGA.}
+\item \underline{J. Tu} and G. Zhu, ``DC/DC converter with wide input voltage range based on SEPIC topology,'' China Patent CN205490141U, August \engordnumber{17}, 2016.\\
+    \subpublication{Designed, simulated, and built a power electronics converter on PCB.}
+\item \underline{J. Tu}, et al., ``Exploring Efficient Strategies for Minesweeper,'' presented at the Workshops at Association for the Advancement of Artificial Intelligence, San Francisco, CA, 2017.\\
+    \subpublication{Proposed an algorithm for playing the Minesweeper game, breaking the world record on winning rate.}
+\item J. Balking, TJ. Chang, PJ. Jackson, G. Tziantzioulis, A. Li, F. Gao, A. Lavrov, G. Chirkov, \underline{J. Tu} and D. Wentzlaff,  ``OpenPiton at 5: A Nexus for Open and Agile Hardware Design,'' in IEEE Micro, vol. 40, no. 4, pp. 22-31, 1 July-Aug. 2020, doi: 10.1109/MM.2020.2997706. \\
+    \subpublication{Assisted in maintaining the Git repository and keeping track of upstream changes.}
+\end{pubdetails}
+}
+
+\def\sectionTeching{%
+\section{Teaching Experience}
+\techexp{Intel REU} {Research Experience for Undergrads (REU)}{2022}
+{Student Mentor} {Prof. David Wentzlaff}
+\techexp{\liningnums{ECE203}} {Electronic Circuit Design Analysis and Implementation}{2022}
+{Teaching Assistant} {Dr. Hossein Valavi}
+\techexp{\liningnums{ELE115}} {Introduction to Computing: Programming Autonomous Vehicles}{2020}
+{Head Teaching Assistant} {Prof. David Wentzlaff}
+}
+
+\def\sectionMisc{%
+\section{Awards and Honors}
+\textbf{Full Scholarship}, Princeton University, \hfill{} \emph{2018-2019}\\
+\textbf{Meritorious Winner}, The Mathematical Contest in Modeling \hfill{} \emph{2017}\\
+\textbf{Alumni Scholarship}, Tsinghua University \hfill{} \emph{2015-2017}\\
+\textbf{Scholarship for Outstanding Technology Creativeness}, Tsinghua University \hfill{} \emph{2015-2016}
+\section{Hobbies and Interests}
+Open-Source Developer, Maker, DIYer, Fan Art Creator, Stable Diffusion Artist, Graphic/Game Designer, Violist/Cellist. \hfill $\square$
+}
+
+\makeatletter
+\def\@maketitle{%
+\begin{center}
+    {\Large {Jinzheng Tu} (aka. \texttt{\underline{b1}})}\\\smallskip
+    {\href{mailto:b1f6c1c4@gmail.com} {b1f6c1c4@gmail.com}}\ |\ %\smallskip
+    {\href{https://github.com/b1f6c1c4} {github.com/b1f6c1c4}}
+\end{center}
+\vspace{-1.5em}}
+\makeatother
