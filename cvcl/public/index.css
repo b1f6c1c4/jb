@@ -1,10 +1,57 @@
-html, body {
+html, body, main {
   margin: 0;
   padding: 0;
+}
+
+body {
+  display: flex;
+  align-items: stretch;
   font-family: Inconsolata, Consolas;
 }
 
+aside {
+  min-width: max-content;
+  margin: 0;
+  padding: 0.5em;
+  overflow-y: scroll;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+form {
+  display: none;
+}
+
+main {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background-color: inherit;
+}
+
+iframe.inactive {
+  z-index: -1;
+  visibility: none;
+}
+
+iframe.loading {
+  z-index: 1;
+  opacity: 0.3;
+}
+
 section {
+  position: relative;
   display: flex;
   align-items: stretch;
   padding: 1.2em 0 0 0;
@@ -23,8 +70,9 @@ h2 {
 
 ul {
   min-height: 2em;
-  width: 5em;
-  max-width: 5em;
+  --ul-width: 10em;
+  width: var(--ul-width);
+  max-width: var(--ul-width);
   border: solid 2px black;
   margin: 0;
   padding: 5px;
@@ -53,7 +101,7 @@ section > div > ul:last-child {
 
 section > div span {
   position: absolute;
-  width: calc(5em / 1.5);
+  width: calc(var(--ul-width) / 1.5);
   display: block;
   font-size: 1.5em;
   font-weight: bolder;

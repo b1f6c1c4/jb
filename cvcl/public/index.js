@@ -1,8 +1,76 @@
-function recompile() {
-  console.log('recompile');
-}
+window.addEventListener('load', async () => {
+  const form = document.querySelector('form');
+  const hidden = document.querySelector('form input[type=hidden]');
+  const if1 = document.getElementById('if1');
+  const if2 = document.getElementById('if2');
 
-window.addEventListener('load', () => {
+  let iframe1 = true;
+
+  function recompile() {
+    const find = (id) => [...document.querySelectorAll(
+      `section#${id} > div > ul:first-child > li`)]
+      .map((e) => e.innerText);
+    let latex = `
+  \\documentclass[11pt,letterpaper]{article}
+  \\input{portfolio}
+
+  \\begin{document}
+  \\maketitle
+  \\pagestyle{empty}
+  \\thispagestyle{empty}
+
+  `;
+    for (const s of find('sections')) {
+      latex += s;
+      latex += '\n';
+      switch (s) {
+        case '\\section{Skills}':
+          latex += find('skills').join('\n');
+          break;
+        case '\\section{Experiences}':
+          latex += find('exps').join('\n');
+          break;
+        case '\\section{Projects}':
+          latex += find('projs').join('\n');
+          break;
+      }
+      latex += '\n';
+    }
+    latex += '\\end{document}';
+    hidden.value = latex;
+    if (iframe1) {
+      if2.classList.add('loading');
+      if2.classList.remove('inactive');
+      form.target = 'if2';
+      form.submit();
+    } else {
+      if1.classList.add('loading');
+      if1.classList.remove('inactive');
+      form.target = 'if1';
+      form.submit();
+    }
+  }
+
+  function finishRecompile() {
+    if (iframe1) {
+      if2.classList.remove('loading');
+      if1.classList.add('inactive');
+    } else {
+      if1.classList.remove('loading');
+      if2.classList.add('inactive');
+    }
+    iframe1 ^= true;
+  }
+
+  if1.addEventListener('load', finishRecompile);
+  if2.addEventListener('load', finishRecompile);
+
+  const projsUl = document.querySelector('section#projs > ul');
+  for (const proj of await (await fetch('/projs')).json()) {
+    const el = document.createElement('li');
+    el.innerText = proj;
+    projsUl.appendChild(el);
+  }
   for (const section of document.querySelectorAll('section')) {
     const avail = section.querySelector('ul:nth-child(2)');
     const active = section.querySelector('div > ul:first-child');
@@ -50,4 +118,6 @@ window.addEventListener('load', () => {
       },
     });
   }
+
+  recompile();
 });
