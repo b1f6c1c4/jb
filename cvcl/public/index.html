@@ -1,7 +1,7 @@
 <html>
   <head>
     <link rel="stylesheet" href="index.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js" integrity="sha512-csIng5zcB+XpulRUa+ev1zKo7zRNGpEaVfNB9On1no9KYTEY/rLGAEEpvgdw6nim1WdTuihZY1eqZ31K7/fZjw==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+    <script src="node_modules/sortablejs/Sortable.min.js" defer></script>
     <script src="index.js" defer></script>
   </head>
   <body>
@@ -58,9 +58,6 @@
     <form action="/pdf" method="post">
       <input name="latex" type="hidden">
     </form>
-    <main>
-    <iframe id="if1" name="if1" class="inactive"></iframe>
-    <iframe id="if2" name="if2" class="inactive"></iframe>
-    </main>
+    <iframe src="/web/viewer.html"></iframe>
   </body>
 </html>

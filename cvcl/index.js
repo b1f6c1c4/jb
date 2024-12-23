@@ -29,13 +29,14 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
   const app = express();
 
-  app.use(express.static(__dirname + '/public'));
+  app.use(express.static(path.join(__dirname, 'public')));
+  app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
   app.get('/projs', (req, res) => {
     res.json(projs);
   });
 
-  app.post('/projs', bodyParser.raw(), async (req, res) => {
+  app.post('/projs', bodyParser.text(), async (req, res) => {
     const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given the job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
 
 #### BEGIN JOB DESCRIPTION ####
@@ -59,8 +60,8 @@ ${projsDescription}
     res.json(recommendation);
   });
 
-  app.post('/pdf', bodyParser.urlencoded(), bodyParser.raw(), async (req, res) => {
-    if ('latex' in req.body) {
+  app.post('/pdf', bodyParser.urlencoded(), bodyParser.text(), async (req, res) => {
+    if (typeof req.body === 'object' && 'latex' in req.body) {
       req.body = req.body.latex;
     }
     if (!req.body.length) {

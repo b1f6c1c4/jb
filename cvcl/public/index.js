@@ -1,10 +1,5 @@
 window.addEventListener('load', async () => {
-  const form = document.querySelector('form');
-  const hidden = document.querySelector('form input[type=hidden]');
-  const if1 = document.getElementById('if1');
-  const if2 = document.getElementById('if2');
-
-  let iframe1 = true;
+  const iframe = document.querySelector('iframe');
 
   function recompile() {
     const find = (id) => [...document.querySelectorAll(
@@ -37,33 +32,8 @@ window.addEventListener('load', async () => {
       latex += '\n';
     }
     latex += '\\end{document}';
-    hidden.value = latex;
-    if (iframe1) {
-      if2.classList.add('loading');
-      if2.classList.remove('inactive');
-      form.target = 'if2';
-      form.submit();
-    } else {
-      if1.classList.add('loading');
-      if1.classList.remove('inactive');
-      form.target = 'if1';
-      form.submit();
-    }
+    iframe.contentWindow.postMessage(latex);
   }
-
-  function finishRecompile() {
-    if (iframe1) {
-      if2.classList.remove('loading');
-      if1.classList.add('inactive');
-    } else {
-      if1.classList.remove('loading');
-      if2.classList.add('inactive');
-    }
-    iframe1 ^= true;
-  }
-
-  if1.addEventListener('load', finishRecompile);
-  if2.addEventListener('load', finishRecompile);
 
   const projsUl = document.querySelector('section#projs > ul');
   for (const proj of await (await fetch('/projs')).json()) {
