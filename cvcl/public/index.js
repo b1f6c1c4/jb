@@ -46,6 +46,9 @@ window.addEventListener('load', async () => {
         case '\\section{Skills}':
           latex += find('skills').join('\n');
           break;
+        case '\\section{Education}':
+          latex += find('edus').join('\n');
+          break;
         case '\\section{Experiences}':
           latex += find('exps').join('\n');
           break;
@@ -66,12 +69,16 @@ window.addEventListener('load', async () => {
     });
   }
 
-  const projsUl = document.querySelector('section#projs > ul');
-  for (const proj of await (await fetch('/projs', { headers: { 'X-Profile': profile } })).json()) {
-    const el = document.createElement('li');
-    el.innerText = proj;
-    projsUl.appendChild(el);
-  }
+  const profileData = await (await fetch('/profile', { headers: { 'X-Profile': profile } })).json();
+  ['sections', 'projs', 'edus', 'exps', 'skills'].map((id) => {
+    const ul = document.querySelector(`section#${id} > ul`);
+    if (!profileData[id]) return;
+    for (const obj of profileData[id]) {
+      const el = document.createElement('li');
+      el.innerText = obj;
+      ul.appendChild(el);
+    }
+  });
   for (const section of document.querySelectorAll('section')) {
     const avail = section.querySelector('ul:nth-child(2)');
     const active = section.querySelector('div > ul:first-child');

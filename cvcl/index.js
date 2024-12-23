@@ -9,7 +9,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 async function parsePortfolio(fn) {
   const rawPortfolio = await fs.readFile(path.join(__dirname, 'data', fn), 'utf8');
-  const projs = [...rawPortfolio.match(/(?<=\\def)\\p[a-zA-z]+/g)];
+  const projs = rawPortfolio.match(/(?<=\\def)\\p[A-Z][a-zA-z]*/g);
   let projsDescription = '';
   for (const proj of projs) {
     const id = rawPortfolio.indexOf(proj) + proj.length;
@@ -21,17 +21,28 @@ async function parsePortfolio(fn) {
     projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
   }
   return {
-    projs,
     rawPortfolio,
+    projs,
+    projsDescription,
+    edus: rawPortfolio.match(/(?<=\\def)\\ed[A-Z][a-zA-z]*/g),
+    exps: rawPortfolio.match(/(?<=\\def)\\e[A-Z][a-zA-z]*/g),
+    skills: rawPortfolio.match(/(?<=\\def)\\s[A-Z][a-zA-z]*/g),
+    sections: rawPortfolio.match(/(?<=\\def)\\section[A-Z][a-zA-z]*/g),
   };
 }
 
 function findProfile(req, res, next) {
-  parsePortfolio(req.get('X-Profile')).then((obj) => {
+  const p = req.get('X-Profile');
+  if (!p) {
+    res.status(400).send('X-Profile not set');
+    return;
+  }
+  parsePortfolio(p).then((obj) => {
     req.profile = obj;
     next();
   }).catch((err) => {
-    res.status(400).send('X-Profile not set');
+    console.error(err);
+    res.status(500).send(err.toString());
   });
 }
 
@@ -52,8 +63,12 @@ function findProfile(req, res, next) {
     res.json(await fs.readdir(path.join(__dirname, 'data')));
   });
 
-  app.get('/projs', findProfile, (req, res) => {
-    res.json(req.profile.projs);
+  app.get('/profile', findProfile, (req, res) => {
+    res.json({
+      ...req.profile,
+      rawPortfolio: undefined,
+      projsDescription: undefined,
+    });
   });
 
   app.post('/projs', findProfile, bodyParser.text(), async (req, res) => {
