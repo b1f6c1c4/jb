@@ -1,11 +1,15 @@
 const express = require('express');
 const fs = require('node:fs/promises');
+const path = require('node:path');
+const os = require('node:os');
+const util = require('node:util');
+const exec = util.promisify(require('node:child_process').exec);
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 (async function() {
   const [apiKey, rawPortfolio] = await Promise.all([
-    fs.readFile(__dirname + '/.env', 'utf8'),
-    fs.readFile(__dirname + '/data/portfolio.tex', 'utf8'),
+    fs.readFile(path.join(__dirname, '.env'), 'utf8'),
+    fs.readFile(path.join(__dirname, 'data', 'portfolio.tex'), 'utf8'),
   ]);
   const projs = [...rawPortfolio.matchAll(/(?<=\\def)\\p[a-zA-z]+/g)];
   let projsDescription = '';
@@ -63,6 +67,32 @@ ${projsDescription}
         recommendation.push(r);
     }
     res.json(recommendation);
+  });
+
+  app.post('/pdf', rawBody, async (req, res) => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cvcl-'));
+    try {
+      await Promise.all([
+        fs.writeFile(path.join(dir, 'portfolio.tex'), rawPortfolio, 'utf8'),
+        fs.writeFile(path.join(dir, 'main.tex'), req.body, 'utf8'),
+      ]);
+      await exec(
+        'latexmk -halt-on-error -file-line-error -pdf -lualatex main.tex',
+        { cwd: dir });
+      const pdf = await fs.readFile(path.join(dir, 'main.pdf'));
+      res.set('Content-Type', 'application/pdf');
+      res.send(pdf);
+    } catch (err) {
+      try {
+        const log = await fs.readFile(path.join(dir, 'main.log'));
+        res.status(422).send(log);
+      } catch {
+        console.error(err);
+        res.status(500).send(err.toString());
+      }
+    } finally {
+      await fs.rm(dir, { force: true, recursive: true });
+    }
   });
 
   app.listen(3000, '0.0.0.0');
