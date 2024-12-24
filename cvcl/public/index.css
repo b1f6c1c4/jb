@@ -25,6 +25,7 @@ body {
 }
 
 aside {
+  position: relative;
   min-width: 10em;
   box-sizing: border-box;
   height: 100%;
@@ -241,4 +242,19 @@ nav select {
   width: 100%;
   scroll-snap-align: end;
   font-size: 14px;
+}
+
+#splitter {
+  position: absolute;
+  right: -3px;
+  width: 5px;
+  top: 0;
+  height: 100%;
+  background-color: #e8e8e8;
+  z-index; 2;
+  cursor: ew-resize;
+}
+
+#splitter:hover {
+  background-color: #ececec;
 }

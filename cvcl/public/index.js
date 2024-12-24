@@ -305,4 +305,22 @@ window.addEventListener('load', async () => {
     else
       alert(resp.status + ':' + await resp.text());
   }
+
+  function setSplit(e) {
+    const w = e.clientX < 140 ? '140px' : `${e.clientX}px`;
+    document.querySelector('aside').style.width = w;
+    document.querySelector('aside').style.minWidth = w;
+    document.querySelector('aside').style.maxWidth = w;
+  }
+  document.querySelector('#splitter').addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    console.log('d');
+    iframe.style.pointerEvents = 'none';
+    document.addEventListener('mousemove', setSplit);
+    document.addEventListener('mouseup', () => {
+      console.log('u');
+      iframe.style.removeProperty('pointer-events');
+      document.removeEventListener('mousemove', setSplit);
+    }, { once: true });
+  });
 });
