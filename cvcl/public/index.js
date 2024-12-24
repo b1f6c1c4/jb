@@ -127,6 +127,14 @@ window.addEventListener('load', async () => {
     const avail = section.querySelector('ul:nth-child(2)');
     const active = section.querySelector('div > ul:first-child');
     const discard = section.querySelector('div > ul:last-child');
+    discard.addEventListener('mousedown', () => {
+      for (const el of active.querySelectorAll('li.sortable-selected') ?? []) {
+        for (const e of avail.querySelectorAll('li') ?? [])
+          if (e.innerText === el.innerText)
+            e.classList.remove('selected');
+        active.removeChild(el);
+      }
+    });
     Sortable.create(avail, {
       multiDrag: true,
       group: {
@@ -161,8 +169,8 @@ window.addEventListener('load', async () => {
       },
       animation: 150,
       onAdd: () => {
-        for (const el of discard.querySelectorAll('li')) {
-          for (const e of avail.querySelectorAll('li'))
+        for (const el of discard.querySelectorAll('li') ?? []) {
+          for (const e of avail.querySelectorAll('li') ?? [])
             if (e.innerText === el.innerText)
               e.classList.remove('selected');
           discard.removeChild(el);
@@ -220,6 +228,7 @@ window.addEventListener('load', async () => {
   document.querySelector('#edit').addEventListener('click', startEdit);
   document.querySelector('#llm').addEventListener('click', revise);
 
+  let dirty = false;
   async function saveEdit() {
     if (editor.getReadOnly(true))
       return;
@@ -240,12 +249,17 @@ window.addEventListener('load', async () => {
       alert(resp.status);
       throw new Error(await resp.text());
     }
+    dirty = true;
   }
   function stopEdit() {
-    editor.setValue('');
-    editor.setReadOnly(true);
-    document.querySelector('aside > div').scrollTo(0, 0);
-    document.querySelector('#llm').style.display = 'none';
+    if (dirty) {
+      window.location.reload();
+    } else {
+      editor.setValue('');
+      editor.setReadOnly(true);
+      document.querySelector('aside > div').scrollTo(0, 0);
+      document.querySelector('#llm').style.display = 'none';
+    }
   }
   async function startEdit() {
     const vimApi = window.require('ace/keyboard/vim').Vim;
@@ -256,7 +270,6 @@ window.addEventListener('load', async () => {
     vimApi.defineEx('wq', 'wq', function () {
       saveEdit().then(stopEdit);
     });
-    vimApi.defineEx('!llm', '!', revise);
     const resp = await fetch('/profile', {
       headers: {
         'X-Profile': profile,
@@ -291,8 +304,15 @@ window.addEventListener('load', async () => {
     document.querySelector('#llm').style.removeProperty('display');
   }
   async function revise() {
-    const adj = prompt('You want LLM to do what for you?', 'make it better suited for resume');
     const doc = editor.getSelectedText();
+    if (!doc) {
+      alert('Select text first');
+      return;
+    }
+    const adj = prompt('You want LLM to do what for you?', 'make it better suited for resume');
+    if (!adj) {
+      return;
+    }
     const resp = await fetch('/revise', {
       method: 'POST',
       body: JSON.stringify({ adj, doc }),
