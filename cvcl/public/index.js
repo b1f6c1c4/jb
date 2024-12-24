@@ -43,6 +43,7 @@ window.addEventListener('load', async () => {
     }
   });
 
+  document.querySelector('#refresh').addEventListener('click', recompile);
   const iframe = document.querySelector('iframe');
 
   let asideOpen = true;

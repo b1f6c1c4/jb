@@ -2,6 +2,7 @@
   --toolbar-bg-color: rgba(249, 249, 250, 1);
   --toolbar-border-color: rgba(204, 204, 204, 1);
   --button-hover-color: rgba(221, 222, 223, 1);
+  --ul-width: 10em;
 }
 
 * {
@@ -74,28 +75,31 @@ section {
   position: relative;
   display: flex;
   align-items: stretch;
-  padding: 1.2em 0 0 0;
+  margin: 1.2em 0 0 0;
   min-height: 10em;
-  max-height: 20em;
+  max-height: calc((100vh - 32px) * 0.7);
+  border: solid 1px black;
+  border-radius: 4px;
+}
+
+section:not(#sections) > div {
+  border-left: solid 1px black;
 }
 
 h2 {
   font-size: inherit;
   position: absolute;
-  top: 0;
+  top: -1.2em;
   left: 0;
   margin: 0;
   padding: 0;
 }
 
 ul {
-  --ul-width: 10em;
   width: var(--ul-width);
   max-width: var(--ul-width);
-  border: solid 2px black;
   margin: 0;
   padding: 5px;
-  border-radius: 4px;
   box-sizing: content-box;
 }
 
@@ -115,6 +119,7 @@ section > div > ul:first-child {
 }
 
 section > div > ul:last-child {
+  border-top: solid 1px black;
   height: 1.7em;
   background-color: #d0d0d0;
 }
@@ -126,6 +131,7 @@ section > div span {
   font-size: 1.2em;
   font-weight: bolder;
   text-align: center;
+  user-select: none;
 }
 
 li {
@@ -134,8 +140,24 @@ li {
   display: block;
   border: solid 1px gray;
   border-radius: 3px;
-  overflow: hidden;
+  overflow-x: scroll;
   cursor: grab;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+#sections {
+  flex-direction: column;
+  --ul-width: calc(10em * 2 + 5px * 2 + 1px);
+}
+
+#sections > div {
+  border-top: solid 1px black;
+}
+
+#sections > div > ul:first-child {
+  min-height: 1em;
 }
 
 .sortable-selected {
@@ -179,6 +201,7 @@ nav select {
   border-radius: 2px;
   box-sizing: border-box;
   position: relative;
+  cursor: default;
 }
 
 .btn::before {
@@ -192,7 +215,6 @@ nav select {
   top: 6px;
   left: 6px;
   display: inline-block;
-  cursor: pointer;
 }
 
 .btn:hover {
@@ -203,12 +225,8 @@ a.btn::before {
   mask-image: url(web/images/toolbarButton-editorInk.svg);
 }
 
-#save::before {
-  mask-image: url(web/images/toolbarButton-download.svg);
-}
-
-#load::before {
-  mask-image: url(web/images/toolbarButton-openFile.svg);
+#refresh::before {
+  mask-image: url(web/images/secondaryToolbarButton-rotateCcw.svg);
 }
 
 #loading {
