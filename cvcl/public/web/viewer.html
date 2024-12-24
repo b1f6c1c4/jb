@@ -452,7 +452,7 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
     <script>
       window.addEventListener('message', async (event) => {
         window.top.postMessage('Fetching...');
-        const resp = await fetch('/pdf', event.data);
+        const resp = await fetch(event.data.url, event.data);
         window.top.postMessage('Downloading...');
         const style = document.getElementById('error-wrapper').style;
         const pre = document.getElementById('error-overlay');

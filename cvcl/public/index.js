@@ -65,8 +65,8 @@ window.addEventListener('load', async () => {
     }
     latex += '\\end{document}';
     iframe.contentWindow.postMessage({
-      method: 'POST',
-      body: latex,
+      url: '/pdf?' + new URLSearchParams({ latex }),
+      method: 'GET',
       headers: {
         'Content-Type': 'text/plain',
         'X-Profile': profile,

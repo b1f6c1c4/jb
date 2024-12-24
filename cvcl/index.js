@@ -120,15 +120,12 @@ ${req.profile.projsDescription}
     res.json(recommendation);
   });
 
-  app.post('/pdf', findProfile, bodyParser.urlencoded(), bodyParser.text(), async (req, res) => {
-    if (typeof req.body === 'object' && 'latex' in req.body) {
-      req.body = req.body.latex;
-    }
-    if (!req.body.length) {
+  app.get('/pdf', findProfile, async (req, res) => {
+    if (!req.query.latex) {
       res.sendStatus(400);
       return;
     }
-    const cacheKey = req.profile.rawPortfolio + req.body;
+    const cacheKey = req.profile.rawPortfolio + req.query.latex;
     const cacheResult = pdfCache.get(cacheKey);
     if (cacheResult !== undefined) {
       res.set('Content-Type', 'application/pdf');
@@ -144,6 +141,8 @@ ${req.profile.projsDescription}
       const pdf = await fs.readFile(path.join(dir, 'main.pdf'));
       pdfCache.set(cacheKey, pdf);
       res.set('Content-Type', 'application/pdf');
+      res.set('Cache-Control', 'no-cache');
+      res.set('Vary', 'X-Profile');
       res.send(pdf);
     } catch (err) {
       res.set('Content-Type', 'text/plain');
