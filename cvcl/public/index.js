@@ -79,7 +79,7 @@ window.addEventListener('load', async () => {
         latex += find(profileData.knownSections[s]).join('\n');
         const m = s.match(/^\\begin\{(?<env>[^}]+)\}/);
         if (m) {
-          latex += `\\end{${m.groups.env}}\n`;
+          latex += `\n\\end{${m.groups.env}}\n`;
         }
       }
       latex += '\n';
