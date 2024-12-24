@@ -2,6 +2,7 @@
   <head>
     <link rel="stylesheet" href="index.css">
     <script src="node_modules/sortablejs/Sortable.min.js" defer></script>
+    <script src="node_modules/ace-builds/src/ace.js" defer></script>
     <script src="index.js" defer></script>
   </head>
   <body>
@@ -10,8 +11,9 @@
         <select title="Choose profile">
           <option value="new">(New...)</option>
         </select>
-        <a href="/edit.html" class="btn" title="Edit profile"></a>
+        <span id="edit" class="btn" title="Edit profile"></span>
         <span id="refresh" class="btn" title="Recompile"></span>
+        <span id="llm" style="display: none" class="btn" title="Revise selected text"></span>
         <span id="loading">Welcome</span>
       </nav>
       <header></header>
@@ -46,6 +48,10 @@
           <ul></ul>
           <div><ul></ul><ul><span>🗑</span></ul></div>
         </section>
+        <div class="fake-section">
+          <h2>Profile Editor</h2>
+        </div>
+        <div id="editor"></div>
       </div>
     </aside>
     <form action="/pdf" method="post">

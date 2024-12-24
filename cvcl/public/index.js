@@ -32,8 +32,14 @@ window.addEventListener('load', async () => {
     if (e.target.value === 'new') {
       const fn = prompt('Name of the new profile? Must end with .tex');
       if (fn && fn.endsWith('.tex')) {
+        profile = fn;
+        const el = document.createElement('option');
+        el.value = fn;
+        el.innerText = fn;
+        el.setAttribute('selected', 'selected');
+        profileSelect.appendChild(el);
         window.localStorage.setItem('X-Profile', fn);
-        window.location.href = '/edit.html';
+        startEdit();
       } else {
         e.target.value = profile;
       }
@@ -205,4 +211,98 @@ window.addEventListener('load', async () => {
   });
 
   recompile();
+
+  const editor = ace.edit('editor');
+  window.editor = editor;
+  editor.setKeyboardHandler('ace/keyboard/vim');
+  editor.session.setMode('ace/mode/latex');
+  editor.renderer.setShowGutter(false);
+  document.querySelector('#edit').addEventListener('click', startEdit);
+  document.querySelector('#llm').addEventListener('click', revise);
+
+  async function saveEdit() {
+    if (editor.getReadOnly(true))
+      return;
+    const body = editor.getValue();
+    if (body.length < 30) {
+      if (!confirm('are you sure?')) {
+        return;
+      }
+    }
+    const resp = await fetch('/profile', {
+      method: 'PUT',
+      body,
+      headers: {
+        'X-Profile': profile,
+      },
+    });
+    if (!resp.ok) {
+      alert(resp.status);
+      throw new Error(await resp.text());
+    }
+  }
+  function stopEdit() {
+    editor.setValue('');
+    editor.setReadOnly(true);
+    document.querySelector('aside > div').scrollTo(0, 0);
+    document.querySelector('#llm').style.display = 'none';
+  }
+  async function startEdit() {
+    const vimApi = window.require('ace/keyboard/vim').Vim;
+    vimApi.defineEx('write', 'w', function () {
+      saveEdit();
+    });
+    vimApi.defineEx('quit', 'q', stopEdit);
+    vimApi.defineEx('wq', 'wq', function () {
+      saveEdit().then(stopEdit);
+    });
+    vimApi.defineEx('!llm', '!', revise);
+    const resp = await fetch('/profile', {
+      headers: {
+        'X-Profile': profile,
+      },
+    });
+    let txt;
+    if (resp.ok)
+      txt = (await resp.json()).rawPortfolio;
+    else if (resp.status === 404)
+      txt = `\\documentclass{article}
+
+% Specify default sections:
+% edus   = \\section{Education}   % <- \\def\\edXXXX
+% exps   = \\section{Experience}  % <- \\def\\eXXXX
+% skills = \\section{Skills}      % <- \\def\\sXXXX
+% lics   = \\section{Licenses}    % <- \\def\\lcXXXX
+
+% For extra sections:
+% \\sectionXXXX
+
+% Note: If default sections are environments, \\end will be added automatically.
+%       However, extra sections must not be environments.
+
+% Keep this:
+\\begin{document}
+`;
+    else
+      txt = resp.text();
+    editor.setValue(txt, -1);
+    editor.focus();
+    document.querySelector('aside > div').scrollTo(0, 1e30);
+    document.querySelector('#llm').style.removeProperty('display');
+  }
+  async function revise() {
+    const adj = prompt('You want LLM to do what for you?', 'make it better suited for resume');
+    const doc = editor.getSelectedText();
+    const resp = await fetch('/revise', {
+      method: 'POST',
+      body: JSON.stringify({ adj, doc }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (resp.ok)
+      editor.insert(await resp.text());
+    else
+      alert(resp.status + ':' + await resp.text());
+  }
 });
