@@ -7,12 +7,15 @@
   <body>
     <aside>
       <nav>
-        <select>
+        <select title="Choose profile">
           <option value="new">(New...)</option>
         </select>
-        <a href="/edit.html"><button>Edit</button></a>
-        <span id="loading"></span>
+        <a href="/edit.html" class="btn" title="Edit profile"></a>
+        <span id="save" class="btn" title="Save JSON"></span>
+        <span id="load" class="btn" title="Load JSON"></span>
+        <span id="loading">Welcome</span>
       </nav>
+      <header></header>
       <div>
         <section id="sections">
           <h2>Sections</h2>
@@ -36,6 +39,11 @@
         </section>
         <section id="projs">
           <h2>Projects <button id="auto_projs">Auto</button></h2>
+          <ul></ul>
+          <div><ul></ul><ul><span>🗑</span></ul></div>
+        </section>
+        <section id="lics">
+          <h2>Lics &amp; Certs</h2>
           <ul></ul>
           <div><ul></ul><ul><span>🗑</span></ul></div>
         </section>

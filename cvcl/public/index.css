@@ -1,6 +1,15 @@
-html, body, main {
+:root {
+  --toolbar-bg-color: rgba(249, 249, 250, 1);
+  --toolbar-border-color: rgba(204, 204, 204, 1);
+  --button-hover-color: rgba(221, 222, 223, 1);
+}
+
+* {
   margin: 0;
   padding: 0;
+}
+
+html, body, main {
   height: 100%;
   max-height: 100%;
   width: 100%;
@@ -22,16 +31,29 @@ aside {
   max-height: 100%;
   margin: 0;
   padding: 0 0.5em;
+  border-right: solid 1px var(--toolbar-border-color);
 }
 
-nav {
+nav, header {
   position: fixed;
-  top: 0.5em;
+  top: 0;
+  left: 0;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0;
+  font-size: 0;
+}
+
+header {
+  width: 100%;
+  z-index: -1;
+  background-color: var(--toolbar-bg-color);
+  box-shadow: 0 1px 0 var(--toolbar-border-color);
 }
 
 aside > div {
-  margin-top: 2.18em;
-  height: calc(100% - 2.18em);
+  margin-top: 32px;
+  height: calc(100% - 32px);
   box-sizing: border-box;
   overflow-y: scroll;
   -ms-overflow-style: none;
@@ -54,7 +76,7 @@ section {
   align-items: stretch;
   padding: 1.2em 0 0 0;
   min-height: 10em;
-  height: 10em;
+  max-height: 20em;
 }
 
 h2 {
@@ -132,4 +154,65 @@ li {
 
 #auto_projs {
   font-size: 0.8em;
+}
+
+nav * {
+  vertical-align: top;
+}
+
+nav select {
+  margin: 6.5px;
+  margin-right: 3.5px;
+}
+
+.btn {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+  outline: none;
+  background: none;
+  line-height: 14px;
+  user-select: none;
+  margin: 2px 1px;
+  padding: 2px 6px 0;
+  min-width: 16px;
+  border-radius: 2px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.btn::before {
+  content: '';
+  background-color: black;
+  opacity: 0.7;
+  mask-size: cover;
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 6px;
+  left: 6px;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background-color: var(--button-hover-color);
+}
+
+a.btn::before {
+  mask-image: url(web/images/toolbarButton-editorInk.svg);
+}
+
+#save::before {
+  mask-image: url(web/images/toolbarButton-download.svg);
+}
+
+#load::before {
+  mask-image: url(web/images/toolbarButton-openFile.svg);
+}
+
+#loading {
+  display: inline-block;
+  font-size: initial;
+  margin: 6.5px;
 }

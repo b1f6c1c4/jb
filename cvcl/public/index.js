@@ -18,6 +18,15 @@ window.addEventListener('load', async () => {
     }
     profileSelect.appendChild(el);
   }
+  const profileData = await (await fetch('/profile', { headers: { 'X-Profile': profile } })).json();
+  if (!Array.isArray(profileData.sections))
+    profileData.sections = [];
+  profileData.sections.unshift(...Object.keys(profileData.knownSections));
+  profileData.sections.push(
+    '\\vspace{-1mm}',
+    '\\vspace{-2mm}',
+    '\\vspace{-3mm}',
+    '\\vspace{-4mm}');
 
   profileSelect.addEventListener('change', (e) => {
     if (e.target.value === 'new') {
@@ -49,27 +58,16 @@ window.addEventListener('load', async () => {
       window.localStorage.setItem(id, JSON.stringify(res));
       return res;
     };
-    let latex = `
-\\begin{document}
-\\maketitle
-
-`;
+    let latex = '';
     for (const s of find('sections')) {
       latex += s;
       latex += '\n';
-      switch (s) {
-        case '\\section{Skills}':
-          latex += find('skills').join('\n');
-          break;
-        case '\\section{Education}':
-          latex += find('edus').join('\n');
-          break;
-        case '\\section{Experiences}':
-          latex += find('exps').join('\n');
-          break;
-        case '\\section{Projects}':
-          latex += find('projs').join('\n');
-          break;
+      if (s in profileData.knownSections) {
+        latex += find(profileData.knownSections[s]).join('\n');
+        const m = s.match(/^\\begin\{(?<env>[^}]+)\}/);
+        if (m) {
+          latex += `\\end{${m.groups.env}}\n`;
+        }
       }
       latex += '\n';
     }
@@ -84,25 +82,18 @@ window.addEventListener('load', async () => {
     });
   }
 
-  const profileData = await (await fetch('/profile', { headers: { 'X-Profile': profile } })).json();
-  if (!Array.isArray(profileData.sections))
-    profileData.sections = [];
-  profileData.sections.unshift(
-    '\\section{Education}',
-    '\\section{Skills}',
-    '\\section{Experiences}',
-    '\\section{Projects}');
-  profileData.sections.push(
-    '\\vspace{-1mm}',
-    '\\vspace{-2mm}',
-    '\\vspace{-3mm}',
-    '\\vspace{-4mm}');
-  ['sections', 'projs', 'edus', 'exps', 'skills'].map((id) => {
+  for (const section of document.querySelectorAll('aside section')) {
+    const id = section.id;
     const avail = document.querySelector(`section#${id} > ul`);
     const active = document.querySelector(`section#${id} > div > ul:first-child`);
     const lastS = window.localStorage.getItem(id);
-    const last = lastS ? JSON.parse(lastS) : [];
-    if (!profileData[id]) return;
+    let last = lastS ? JSON.parse(lastS) : [];
+    if (id === 'sections' && !last.length)
+      last = Object.keys(profileData.knownSections);
+    if (!profileData[id]) {
+      section.style.display = 'none';
+      continue;
+    }
     for (const obj of profileData[id]) {
       const el = document.createElement('li');
       el.innerText = obj;
@@ -118,7 +109,7 @@ window.addEventListener('load', async () => {
         active.appendChild(ela);
       }
     }
-  });
+  };
   for (const section of document.querySelectorAll('section')) {
     const avail = section.querySelector('ul:nth-child(2)');
     const active = section.querySelector('div > ul:first-child');

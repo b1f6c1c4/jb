@@ -74,7 +74,23 @@
         if (resp.ok)
           txt = (await resp.json()).rawPortfolio;
         else if (resp.status === 404)
-          txt = '\\documentclass{article}\n\\title{}\n';
+          txt = `\\documentclass{article}
+
+% Specify default sections:
+% edus   = \\section{Education}   % <- \\def\\edXXXX
+% exps   = \\section{Experience}  % <- \\def\\eXXXX
+% skills = \\section{Skills}      % <- \\def\\sXXXX
+% lics   = \\section{Licenses}    % <- \\def\\lcXXXX
+
+% For extra sections:
+% \\sectionXXXX
+
+% Note: If default sections are environments, \\end will be added automatically.
+%       However, extra sections must not be environments.
+
+% Keep this:
+\\begin{document}
+`;
         else
           txt = resp.text();
         window.editor = ace.edit('editor');

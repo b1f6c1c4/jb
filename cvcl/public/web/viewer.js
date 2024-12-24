@@ -236,7 +236,7 @@ const defaultOptions = {
 };
 {
   defaultOptions.defaultUrl = {
-    value: "/web/crazy.pdf",
+    value: "",
     kind: OptionKind.VIEWER
   };
   defaultOptions.disablePreferences = {

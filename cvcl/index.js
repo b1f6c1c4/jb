@@ -35,6 +35,10 @@ async function parsePortfolio(fn) {
         .replace(/\\g?hhref\{[^}]*\}/, '').trim();
       projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
     }
+  const knownSections = {};
+  for (const m of rawPortfolio.matchAll(/^% (?<id>[a-z]+)\s+=\s+(?<expr>.*)$/gm)) {
+    knownSections[m.groups.expr] = m.groups.id;
+  }
   const profile = {
     file: fp,
     rawPortfolio,
@@ -43,7 +47,9 @@ async function parsePortfolio(fn) {
     edus: rawPortfolio.match(/(?<=\\def)\\ed[A-Z][a-zA-z]*/g),
     exps: rawPortfolio.match(/(?<=\\def)\\e[A-Z][a-zA-z]*/g),
     skills: rawPortfolio.match(/(?<=\\def)\\s[A-Z][a-zA-z]*/g),
+    lics: rawPortfolio.match(/(?<=\\def)\\lc[A-Z][a-zA-z]*/g),
     sections: rawPortfolio.match(/(?<=\\def)\\section[A-Z][a-zA-z]*/g),
+    knownSections,
   };
   profileCache.set(fn, { mtime: st.mtimeNs, profile });
   return profile;
