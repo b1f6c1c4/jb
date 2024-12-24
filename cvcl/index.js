@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const { LRUCache } = require('lru-cache');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
@@ -7,8 +8,21 @@ const util = require('node:util');
 const exec = util.promisify(require('node:child_process').exec);
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
+const profileCache = new LRUCache({
+  max: 16384,
+});
+const pdfCache = new LRUCache({
+  max: 16384,
+});
+
 async function parsePortfolio(fn) {
-  const rawPortfolio = await fs.readFile(path.join(__dirname, 'data', fn), 'utf8');
+  const cacheResult = profileCache.get(fn);
+  const fp = path.join(__dirname, 'data', fn);
+  const st = await fs.stat(fp, { bigint: true });
+  if (cacheResult !== undefined && st.mtimeNs === cacheResult.mtime) {
+    return cacheResult.profile;
+  }
+  const rawPortfolio = await fs.readFile(fp, 'utf8');
   const projs = rawPortfolio.match(/(?<=\\def)\\p[A-Z][a-zA-z]*/g);
   let projsDescription = '';
   for (const proj of projs) {
@@ -20,7 +34,7 @@ async function parsePortfolio(fn) {
       .replace(/\\g?hhref\{[^}]*\}/, '').trim();
     projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
   }
-  return {
+  const profile = {
     rawPortfolio,
     projs,
     projsDescription,
@@ -29,6 +43,8 @@ async function parsePortfolio(fn) {
     skills: rawPortfolio.match(/(?<=\\def)\\s[A-Z][a-zA-z]*/g),
     sections: rawPortfolio.match(/(?<=\\def)\\section[A-Z][a-zA-z]*/g),
   };
+  profileCache.set(fn, { mtime: st.mtimeNs, profile });
+  return profile;
 }
 
 function findProfile(req, res, next) {
@@ -103,6 +119,13 @@ ${req.profile.projsDescription}
       res.sendStatus(400);
       return;
     }
+    const cacheKey = req.body + '@@@@@@' + req.profile.rawPortfolio;
+    const cacheResult = pdfCache.get(cacheKey);
+    if (cacheResult !== undefined) {
+      res.set('Content-Type', 'application/pdf');
+      res.send(cacheResult);
+      return;
+    }
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cvcl-'));
     try {
       await Promise.all([
@@ -113,6 +136,7 @@ ${req.profile.projsDescription}
         'latexmk -halt-on-error -file-line-error -pdf -lualatex main.tex',
         { cwd: dir });
       const pdf = await fs.readFile(path.join(dir, 'main.pdf'));
+      pdfCache.set(cacheKey, pdf);
       res.set('Content-Type', 'application/pdf');
       res.send(pdf);
     } catch (err) {

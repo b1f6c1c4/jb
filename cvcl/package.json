@@ -3,6 +3,7 @@
     "@google/generative-ai": "^0.21.0",
     "body-parser": "^2.0.2",
     "express": "^5.0.1",
+    "lru-cache": "^11.0.2",
     "sortablejs": "^1.15.6"
   }
 }
