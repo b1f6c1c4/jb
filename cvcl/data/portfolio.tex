@@ -22,14 +22,18 @@
 \setmonofont{Inconsolata}[%
     UprightFont={*-Medium},
 ]
-\pagestyle{empty}
-\thispagestyle{empty}
 
 \raggedright
 
 \pagenumbering{arabic}
 \setlength{\footskip} {1em}
 \fancypagestyle{plain} {%
+    \fancyhf{}%
+    \fancyfoot[C]{}%
+    \renewcommand{\headrulewidth} {0pt}%
+    \renewcommand{\footrulewidth} {0pt}%
+}
+\fancypagestyle{fancy} {%
     \fancyhf{}%
     \fancyfoot[C]{--~\thepage~--}%
     \renewcommand{\headrulewidth} {0pt}%

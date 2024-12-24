@@ -20,8 +20,18 @@ window.addEventListener('load', async () => {
   }
 
   profileSelect.addEventListener('change', (e) => {
-    window.localStorage.setItem('X-Profile', e.target.value);
-    window.location.reload();
+    if (e.target.value === 'new') {
+      const fn = prompt('Name of the new profile? Must end with .tex');
+      if (fn && fn.endsWith('.tex')) {
+        window.localStorage.setItem('X-Profile', fn);
+        window.location.href = '/edit.html';
+      } else {
+        e.target.value = profile;
+      }
+    } else {
+      window.localStorage.setItem('X-Profile', e.target.value);
+      window.location.reload();
+    }
   });
 
   const iframe = document.querySelector('iframe');
@@ -31,7 +41,7 @@ window.addEventListener('load', async () => {
   });
 
   function recompile() {
-    loading.innerText = 'Compiling...';
+    loading.innerText = 'Preprocessing...';
     const find = (id) => {
       const res = [...document.querySelectorAll(
         `section#${id} > div > ul:first-child > li`)]

@@ -49,18 +49,30 @@ async function parsePortfolio(fn) {
   return profile;
 }
 
-function findProfile(req, res, next) {
+function checkProfile(req, res, next) {
   const p = req.get('X-Profile');
   if (!p) {
     res.status(400).send('X-Profile not set');
     return;
   }
-  parsePortfolio(p).then((obj) => {
+  if (!p.match(/^[^\/]+\.tex$/)) {
+    res.status(403).send('X-Profile illegal');
+    return;
+  }
+  next();
+}
+
+function findProfile(req, res, next) {
+  parsePortfolio(req.get('X-Profile')).then((obj) => {
     req.profile = obj;
     next();
   }).catch((err) => {
-    console.error(err);
-    res.status(500).send(err.toString());
+    if (err.code === 'ENOENT') {
+      res.sendStatus(404);
+    } else {
+      console.error(err);
+      res.status(500).send(err.toString());
+    }
   });
 }
 
@@ -82,13 +94,18 @@ function findProfile(req, res, next) {
       .filter((fn) => fn.endsWith('\.tex')));
   });
 
-  app.put('/profile', findProfile, bodyParser.text(), async (req, res) => {
-    await fs.rename(req.profile.file, req.profile.file + '.bak');
-    await fs.writeFile(req.profile.file, req.body, 'utf8');
+  app.put('/profile', checkProfile, bodyParser.text(), async (req, res) => {
+    const fp = path.join(__dirname, 'data', req.get('X-Profile'));
+    try {
+      await fs.rename(fp, fp + '.bak');
+    } catch {
+      // ignore
+    }
+    await fs.writeFile(fp, req.body, 'utf8');
     res.sendStatus(204);
   });
 
-  app.get('/profile', findProfile, (req, res) => {
+  app.get('/profile', checkProfile, findProfile, (req, res) => {
     res.json({
       ...req.profile,
       file: undefined,
@@ -96,7 +113,7 @@ function findProfile(req, res, next) {
     });
   });
 
-  app.post('/projs', findProfile, bodyParser.text(), async (req, res) => {
+  app.post('/projs', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
     const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given the job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
 
 #### BEGIN JOB DESCRIPTION ####
@@ -120,7 +137,7 @@ ${req.profile.projsDescription}
     res.json(recommendation);
   });
 
-  app.get('/pdf', findProfile, async (req, res) => {
+  app.get('/pdf', checkProfile, findProfile, async (req, res) => {
     if (!req.query.latex) {
       res.sendStatus(400);
       return;

@@ -1,6 +1,12 @@
 html, body, main {
   margin: 0;
   padding: 0;
+  height: 100%;
+  max-height: 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 body {
@@ -11,8 +17,22 @@ body {
 
 aside {
   min-width: max-content;
+  box-sizing: border-box;
+  height: 100%;
+  max-height: 100%;
   margin: 0;
-  padding: 0.5em;
+  padding: 0 0.5em;
+}
+
+nav {
+  position: fixed;
+  top: 0.5em;
+}
+
+aside > div {
+  margin-top: 2.18em;
+  height: calc(100% - 2.18em);
+  box-sizing: border-box;
   overflow-y: scroll;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -47,7 +67,6 @@ h2 {
 }
 
 ul {
-  min-height: 2em;
   --ul-width: 10em;
   width: var(--ul-width);
   max-width: var(--ul-width);
@@ -55,6 +74,7 @@ ul {
   margin: 0;
   padding: 5px;
   border-radius: 4px;
+  box-sizing: content-box;
 }
 
 section ul:not(:last-child) {
@@ -73,15 +93,15 @@ section > div > ul:first-child {
 }
 
 section > div > ul:last-child {
-  height: 2em;
+  height: 1.7em;
   background-color: #d0d0d0;
 }
 
 section > div span {
   position: absolute;
-  width: calc(var(--ul-width) / 1.5);
+  width: calc(var(--ul-width) / 1.2);
   display: block;
-  font-size: 1.5em;
+  font-size: 1.2em;
   font-weight: bolder;
   text-align: center;
 }

@@ -38,25 +38,35 @@
           headers: {
             'X-Profile': window.localStorage.getItem('X-Profile'),
           },
-        }).then(() => {
-          window.location.href = '/';
+        }).then((resp) => {
+          if (resp.ok)
+            window.location.href = '/';
+          else
+            alert(resp.status);
         });
       });
       document.getElementById('cancel').addEventListener('click', () => {
         window.location.href = '/';
       });
-      fetch('/profile', {
-        headers: {
-          'X-Profile': window.localStorage.getItem('X-Profile'),
-        },
-      }).then((resp) => resp.json())
-        .then((j) => {
-          window.editor = ace.edit('editor');
-          window.editor.setKeyboardHandler('ace/keyboard/vim');
-          window.editor.session.setMode('ace/mode/latex');
-          window.editor.setValue(j.rawPortfolio, -1);
-          window.editor.focus();
+      (async function() {
+        const resp = await fetch('/profile', {
+          headers: {
+            'X-Profile': window.localStorage.getItem('X-Profile'),
+          },
         });
+        let txt;
+        if (resp.ok)
+          txt = (await resp.json()).rawPortfolio;
+        else if (resp.status === 404)
+          txt = '\\documentclass{article}\n\\title{}\n';
+        else
+          txt = resp.text();
+        window.editor = ace.edit('editor');
+        window.editor.setKeyboardHandler('ace/keyboard/vim');
+        window.editor.session.setMode('ace/mode/latex');
+        window.editor.setValue(txt, -1);
+        window.editor.focus();
+      })();
     </script>
   </body>
 </html>
