@@ -129,3 +129,7 @@ li {
 .selected {
   color: #a66;
 }
+
+#auto_projs {
+  font-size: 0.8em;
+}

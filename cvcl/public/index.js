@@ -167,5 +167,44 @@ window.addEventListener('load', async () => {
     });
   }
 
+  document.getElementById('auto_projs').addEventListener('click', async () => {
+    const jd = prompt('Paste the job description here:');
+    if (!jd) {
+      return;
+    }
+    loading.innerText = 'Analyzing...';
+    const resp = await fetch('/projs', {
+      method: 'POST',
+      body: jd,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Profile': profile,
+      },
+    });
+    if (!resp.ok) {
+      loading.innerText = 'Errored!';
+      return;
+    }
+    loading.innerText = 'Downloading...';
+    const answer = await resp.json();
+    if (!answer.length) {
+      loading.innerText = 'No recommendation';
+      return;
+    }
+    for (const el of document.querySelectorAll('section#projs > ul:nth-child(2) > li')) {
+      el.classList.remove('selected');
+      if (answer.includes(el.innerText))
+        el.classList.add('selected');
+    }
+    const active = document.querySelector('section#projs > div > ul:first-child');
+    active.innerHTML = '';
+    for (const obj of answer) {
+      const el = document.createElement('li');
+      el.innerText = obj;
+      active.appendChild(el);
+    }
+    loading.innerText = '';
+  });
+
   recompile();
 });

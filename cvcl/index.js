@@ -130,7 +130,7 @@ ${req.profile.projsDescription}
     const txt = result.response.text();
     const recommendation = [];
     for (const rr of txt.trim().split('\n')) {
-      const r = rr.trim().replace(/^`|`$/, '');
+      const r = rr.trim().replace(/^`|`$/g, '');
       if (req.profile.projs.includes(r))
         recommendation.push(r);
     }
