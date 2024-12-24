@@ -26,9 +26,13 @@ window.addEventListener('load', async () => {
   const iframe = document.querySelector('iframe');
 
   function recompile() {
-    const find = (id) => [...document.querySelectorAll(
-      `section#${id} > div > ul:first-child > li`)]
-      .map((e) => e.innerText);
+    const find = (id) => {
+      const res = [...document.querySelectorAll(
+        `section#${id} > div > ul:first-child > li`)]
+        .map((e) => e.innerText);
+      window.localStorage.setItem(id, JSON.stringify(res));
+      return res;
+    };
     let latex = `
   \\documentclass[11pt,letterpaper]{article}
   \\input{portfolio}
@@ -70,13 +74,34 @@ window.addEventListener('load', async () => {
   }
 
   const profileData = await (await fetch('/profile', { headers: { 'X-Profile': profile } })).json();
+  if (!Array.isArray(profileData.sections))
+    profileData.sections = [];
+  profileData.sections.unshift(
+    '\\section{Education}',
+    '\\section{Skills}',
+    '\\section{Experiences}',
+    '\\section{Projects}');
+  profileData.sections.push(
+    '\\vspace{-1mm}',
+    '\\vspace{-2mm}',
+    '\\vspace{-3mm}',
+    '\\vspace{-4mm}');
   ['sections', 'projs', 'edus', 'exps', 'skills'].map((id) => {
-    const ul = document.querySelector(`section#${id} > ul`);
+    const avail = document.querySelector(`section#${id} > ul`);
+    const active = document.querySelector(`section#${id} > div > ul:first-child`);
+    const lastS = window.localStorage.getItem(id);
+    const last = lastS ? JSON.parse(lastS) : [];
     if (!profileData[id]) return;
     for (const obj of profileData[id]) {
       const el = document.createElement('li');
       el.innerText = obj;
-      ul.appendChild(el);
+      avail.appendChild(el);
+      if (last.includes(obj)) {
+        el.classList.add('selected');
+        const ela = document.createElement('li');
+        ela.innerText = obj;
+        active.appendChild(ela);
+      }
     }
   });
   for (const section of document.querySelectorAll('section')) {
