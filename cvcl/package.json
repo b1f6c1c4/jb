@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@fontsource/inconsolata": "^5.1.0",
     "@google/generative-ai": "^0.21.0",
     "ace-builds": "^1.37.1",
     "body-parser": "^2.0.2",

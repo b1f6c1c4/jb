@@ -21,7 +21,7 @@ html, body, main {
 body {
   display: flex;
   align-items: stretch;
-  font-family: Inconsolata, Consolas;
+  font-family: "Inconsolata", Consolas;
 }
 
 aside {
