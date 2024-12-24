@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <style>
+      html, body, #editor {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      aside {
+        position: fixed;
+        top: 1em;
+        right: 2em;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5em;
+      }
+      aside button {
+        display: block;
+        padding: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <aside>
+      <button id="save">Save</button>
+      <button id="cancel">Cancel</button>
+    </aside>
+    <script src="node_modules/ace-builds/src-min/ace.js"></script>
+    <script>
+      document.getElementById('save').addEventListener('click', () => {
+        fetch('/profile', {
+          method: 'PUT',
+          body: window.editor.getValue(),
+          headers: {
+            'X-Profile': window.localStorage.getItem('X-Profile'),
+          },
+        }).then(() => {
+          window.location.href = '/';
+        });
+      });
+      document.getElementById('cancel').addEventListener('click', () => {
+        window.location.href = '/';
+      });
+      fetch('/profile', {
+        headers: {
+          'X-Profile': window.localStorage.getItem('X-Profile'),
+        },
+      }).then((resp) => resp.json())
+        .then((j) => {
+          window.editor = ace.edit('editor');
+          window.editor.setKeyboardHandler('ace/keyboard/vim');
+          window.editor.session.setMode('ace/mode/latex');
+          window.editor.setValue(j.rawPortfolio, -1);
+          window.editor.focus();
+        });
+    </script>
+  </body>
+</html>

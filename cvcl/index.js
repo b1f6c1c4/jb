@@ -25,16 +25,18 @@ async function parsePortfolio(fn) {
   const rawPortfolio = await fs.readFile(fp, 'utf8');
   const projs = rawPortfolio.match(/(?<=\\def)\\p[A-Z][a-zA-z]*/g);
   let projsDescription = '';
-  for (const proj of projs) {
-    const id = rawPortfolio.indexOf(proj) + proj.length;
-    projsDescription += `---- BEGIN PROJECT \`${proj}\` ----\n`;
-    projsDescription += rawPortfolio.substr(id)
-      .match(/(?<=\\project)[\s\S]+?\n\n/m)[0]
-      .replace(/\\par\b/g, '')
-      .replace(/\\g?hhref\{[^}]*\}/, '').trim();
-    projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
-  }
+  if (projs)
+    for (const proj of projs) {
+      const id = rawPortfolio.indexOf(proj) + proj.length;
+      projsDescription += `---- BEGIN PROJECT \`${proj}\` ----\n`;
+      projsDescription += rawPortfolio.substr(id)
+        .match(/(?<=\\project)[\s\S]+?\n\n/m)[0]
+        .replace(/\\par\b/g, '')
+        .replace(/\\g?hhref\{[^}]*\}/, '').trim();
+      projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
+    }
   const profile = {
+    file: fp,
     rawPortfolio,
     projs,
     projsDescription,
@@ -76,13 +78,20 @@ function findProfile(req, res, next) {
   app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
   app.get('/profiles', async (req, res) => {
-    res.json(await fs.readdir(path.join(__dirname, 'data')));
+    res.json((await fs.readdir(path.join(__dirname, 'data')))
+      .filter((fn) => fn.endsWith('\.tex')));
+  });
+
+  app.put('/profile', findProfile, bodyParser.text(), async (req, res) => {
+    await fs.rename(req.profile.file, req.profile.file + '.bak');
+    await fs.writeFile(req.profile.file, req.body, 'utf8');
+    res.sendStatus(204);
   });
 
   app.get('/profile', findProfile, (req, res) => {
     res.json({
       ...req.profile,
-      rawPortfolio: undefined,
+      file: undefined,
       projsDescription: undefined,
     });
   });
