@@ -113,6 +113,52 @@ function findProfile(req, res, next) {
     });
   });
 
+  app.post('/revise', bodyParser.json(), async (req, res) => {
+    if (!req.body) {
+      res.sendStatus(400);
+      return;
+    }
+    const prompt = `You are a professional career advisor. You need to help a mentee to revise their resume, which was written in LaTeX. The mentee has politely requested you to: ${req.body.adj}. Output revised paragraph only. If the original paragraph was in bullet points (i.e. \\item), the output must also be in bullet points.
+
+Original resume paragraph:
+\`\`\`latex
+${req.body.doc.trim()}
+\`\`\`
+
+Revised resume paragraph:
+\`\`\`latex
+`;
+    const result = await model.generateContent(prompt);
+    const txt = result.response.text().replace(/^``{2}(?:latex)?$/gm, '').trim();
+    if (req.body.doc.indexOf('\n') === -1) {
+      res.send(txt);
+      return;
+    }
+    const orig = req.body.doc.split('\n');
+    const rvse = txt.split('\n');
+    if (Math.abs(orig.length - rvse.length) <= 1) {
+      let merged = '';
+      while (orig.length || rvse.length) {
+        let flag = true;
+        if (orig.length) {
+          if (orig[0].match(/^\s*$/))
+            flag = false;
+          merged += orig.splice(0, 1)[0].replace(/(?<=^|\s)(?=\S)/, '% ') + '\n';
+        }
+        if (flag && rvse.length)
+          merged += rvse.splice(0, 1)[0] + '\n';
+      }
+      merged += req.body.doc.match(/\s*$/);
+      res.send(merged);
+    } else {
+      let merged = '';
+      orig.forEach(t => merged += t.replace(/(?<=^|\s)(?=\S)/, '% ') + '\n');
+      rvse.forEach(t => merged += t + '\n');
+      merged += req.body.doc.match(/\s*$/);
+      res.send(merged);
+    }
+  });
+
   app.post('/projs', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
     const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given the job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
 
