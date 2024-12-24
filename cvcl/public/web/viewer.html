@@ -451,7 +451,9 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
     </div>
     <script>
       window.addEventListener('message', async (event) => {
+        window.top.postMessage('Fetching...');
         const resp = await fetch('/pdf', event.data);
+        window.top.postMessage('Downloading...');
         const style = document.getElementById('error-wrapper').style;
         const pre = document.getElementById('error-overlay');
         style.visibility = 'visible';
@@ -460,19 +462,25 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
         if (resp.ok) {
           pre.innerText = '';
           style.visibility = 'visible';
-          pdfjsLib.getDocument(await resp.arrayBuffer()).promise.then(doc => {
+          const buf = await resp.arrayBuffer();
+          window.top.postMessage('Parsing...');
+          pdfjsLib.getDocument(buf).promise.then(doc => {
             // https://github.com/mozilla/pdf.js/issues/11359#issuecomment-659154737
             doc._pdfInfo.fingerprint = 'constantFingerprint';
             doc._pdfInfo.fingerprints = ['constantFingerprint'];
+            window.top.postMessage('Rendering...');
             PDFViewerApplication.load(doc);
+            window.top.postMessage('');
           });
         } else if (resp.status === 422) {
           style.color = '#ee3';
           style.backgroundColor = '#666c';
+          window.top.postMessage('Errored!');
           pre.innerText = await resp.text();
         } else {
           style.color = '#e33';
           style.backgroundColor = '#000c';
+          window.top.postMessage('Errored!');
           pre.innerText = await resp.text();
         }
       });

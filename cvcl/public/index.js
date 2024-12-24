@@ -1,6 +1,7 @@
 const profileFetch = fetch('/profiles').then((res) => res.json());
 
 window.addEventListener('load', async () => {
+  const loading = document.querySelector('#loading');
   const profileSelect = document.querySelector('select');
   let profile = window.localStorage.getItem('X-Profile');
   const profiles = await profileFetch;
@@ -25,7 +26,12 @@ window.addEventListener('load', async () => {
 
   const iframe = document.querySelector('iframe');
 
+  window.addEventListener('message', (evt) => {
+    loading.innerText = evt.data;
+  });
+
   function recompile() {
+    loading.innerText = 'Compiling...';
     const find = (id) => {
       const res = [...document.querySelectorAll(
         `section#${id} > div > ul:first-child > li`)]
@@ -34,15 +40,10 @@ window.addEventListener('load', async () => {
       return res;
     };
     let latex = `
-  \\documentclass[11pt,letterpaper]{article}
-  \\input{portfolio}
+\\begin{document}
+\\maketitle
 
-  \\begin{document}
-  \\maketitle
-  \\pagestyle{empty}
-  \\thispagestyle{empty}
-
-  `;
+`;
     for (const s of find('sections')) {
       latex += s;
       latex += '\n';
@@ -98,6 +99,10 @@ window.addEventListener('load', async () => {
       avail.appendChild(el);
       if (last.includes(obj)) {
         el.classList.add('selected');
+      }
+    }
+    for (const obj of last) {
+      if (profileData[id].includes(obj)) {
         const ela = document.createElement('li');
         ela.innerText = obj;
         active.appendChild(ela);

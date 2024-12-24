@@ -128,7 +128,7 @@ ${req.profile.projsDescription}
       res.sendStatus(400);
       return;
     }
-    const cacheKey = req.body + '@@@@@@' + req.profile.rawPortfolio;
+    const cacheKey = req.profile.rawPortfolio + req.body;
     const cacheResult = pdfCache.get(cacheKey);
     if (cacheResult !== undefined) {
       res.set('Content-Type', 'application/pdf');
@@ -137,10 +137,7 @@ ${req.profile.projsDescription}
     }
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cvcl-'));
     try {
-      await Promise.all([
-        fs.writeFile(path.join(dir, 'portfolio.tex'), req.profile.rawPortfolio, 'utf8'),
-        fs.writeFile(path.join(dir, 'main.tex'), req.body, 'utf8'),
-      ]);
+      await fs.writeFile(path.join(dir, 'main.tex'), cacheKey, 'utf8'),
       await exec(
         'latexmk -halt-on-error -file-line-error -pdf -lualatex main.tex',
         { cwd: dir });
