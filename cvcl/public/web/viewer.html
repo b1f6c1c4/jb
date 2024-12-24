@@ -450,6 +450,14 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
         <pre id="error-overlay"></pre>
     </div>
     <script>
+      const sdtb = document.getElementById('sidebarToggle');
+      sdtb.classList.add('toggled');
+      sdtb.onclick = (e) => {
+        sdtb.classList.toggle('toggled');
+        window.top.postMessage(true);
+        e.stopImmediatePropagation();
+      };
+      PDFViewerApplication.pdfSidebar?.close();
       window.addEventListener('message', async (event) => {
         window.top.postMessage('Compiling...');
         const resp = await fetch(event.data.url, event.data);
@@ -470,6 +478,7 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
             doc._pdfInfo.fingerprints = ['constantFingerprint'];
             window.top.postMessage('Rendering...');
             PDFViewerApplication.load(doc);
+            PDFViewerApplication.pdfSidebar?.close();
             window.top.postMessage('');
           });
         } else if (resp.status === 422) {

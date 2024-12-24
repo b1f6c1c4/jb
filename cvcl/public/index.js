@@ -45,8 +45,14 @@ window.addEventListener('load', async () => {
 
   const iframe = document.querySelector('iframe');
 
+  let asideOpen = true;
   window.addEventListener('message', (evt) => {
-    loading.innerText = evt.data;
+    if (evt.data === true) {
+      asideOpen ^= true;
+      document.querySelector('aside').style.display = asideOpen ? 'initial' : 'none';
+    } else {
+      loading.innerText = evt.data;
+    }
   });
 
   function recompile() {
