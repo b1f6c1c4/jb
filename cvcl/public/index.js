@@ -337,6 +337,7 @@ window.addEventListener('load', async () => {
     if (typeof ln === 'number')
       editor.gotoLine(ln);
     editor.focus();
+    editor.setReadOnly(false);
     document.querySelector('aside > div').scrollTo(0, 1e30);
     document.querySelector('#llm').style.removeProperty('display');
   }
