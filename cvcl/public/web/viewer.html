@@ -481,19 +481,17 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
             PDFViewerApplication.pdfSidebar?.close();
             window.top.postMessage('');
             function synctex(evt) {
-              if (!evt.altKey) return;
               const rect = evt.currentTarget.getBoundingClientRect();
-              const ratio = 0.666 / PDFViewerApplication.pdfViewer.currentScale;
+              const ratio = 0.746761 / PDFViewerApplication.pdfViewer.currentScale;
               window.top.postMessage({
                 page: evt.currentTarget.getAttribute('data-page-number'),
-                x: Math.round(ratio * (evt.pageX - rect.left)),
-                y: Math.round(ratio * (evt.pageY - rect.top)),
+                x: Math.round(ratio * (evt.pageX - rect.left - 9)),
+                y: Math.round(-50.6492 + ratio * (evt.pageY - rect.top - 9)),
               });
             }
             PDFViewerApplication.eventBus._on('outlineloaded', () => {
               for (const pg of document.querySelectorAll('.page')) {
                 pg.ondblclick = synctex;
-                pg.onmousemove = synctex;
               }
             });
           });

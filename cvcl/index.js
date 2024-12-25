@@ -208,7 +208,7 @@ ${req.profile.projsDescription}
     try {
       await fs.writeFile(path.join(dir, 'main.tex'), cacheKey, 'utf8'),
       await exec(
-        'latexmk -halt-on-error -file-line-error -pdf -lualatex -synctex=1 main.tex',
+        'latexmk -halt-on-error -file-line-error -pdf -pdflatex -synctex=1 main.tex',
         { cwd: dir });
       await Promise.all([
         fs.access(path.join(dir, 'main.pdf'), fs.constants.R_OK),
@@ -224,7 +224,7 @@ ${req.profile.projsDescription}
       res.set('Content-Type', 'text/plain');
       try {
         const { stdout } = await exec(
-          `texfot --quiet --ignore '^(Over|Under)full ' --ignore '^This is pdfTeX, Version ' --ignore '^Output written on ' cat main.log`,
+          `texfot --quiet --ignore '^(Over|Under)full ' --ignore '^This is [a-zA-Z]+TeX, Version ' --ignore '^Output written on ' cat main.log`,
           { cwd: dir });
         res.status(422).send(stdout);
       } catch {
@@ -254,17 +254,23 @@ ${req.profile.projsDescription}
       res.status(500).send('synctex failed: ' + stdout);
       return;
     }
+    let { line } = m[0].groups;
     const split = cacheKey.split('\n');
-    res.send(split[+m[0].groups.line]);
-    return;
-    const preamble = req.profile.rawPortfolio.match(/\n/g).length ;
-    const line = m.groups.line - preamble - 1;
-    // const split = req.query.latex.split('\n');
-    if (line <= 0) {
-      res.status(500).send(`synctex line ${m.groups.line} <= preamble lines ${preamble}`);
+    while (line && split[line] === '') line--;
+    const mm = split[line].match(/^\\(?:p|ed|e|s|lc|section)[A-Z][a-z]*$/);
+    if (!mm) {
+      res.send('0');
       return;
     }
-    res.send(split[line]);
+    let ln = 1;
+    for (const l of split) {
+      if (l.startsWith(`\\def${split[line]}`)) {
+        res.send('' + ln);
+        return;
+      }
+      ln++;
+    }
+    res.send('0');
   });
 
   app.listen(3000, '0.0.0.0');

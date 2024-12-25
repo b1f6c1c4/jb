@@ -96,7 +96,10 @@ window.addEventListener('load', async () => {
           'X-Profile': profile,
         },
       });
-      console.log(JSON.stringify(evt.data) + await resp.text());
+      if (!resp.ok) return;
+      const ln = +await resp.text();
+      if (!ln) return;
+      startEdit(ln);
       return;
     }
     if (evt.data === true) {
@@ -293,7 +296,7 @@ window.addEventListener('load', async () => {
       document.querySelector('#llm').style.display = 'none';
     }
   }
-  async function startEdit() {
+  async function startEdit(ln) {
     const vimApi = window.require('ace/keyboard/vim').Vim;
     vimApi.defineEx('write', 'w', function () {
       saveEdit();
@@ -331,6 +334,8 @@ window.addEventListener('load', async () => {
     else
       txt = resp.text();
     editor.setValue(txt, -1);
+    if (typeof ln === 'number')
+      editor.gotoLine(ln);
     editor.focus();
     document.querySelector('aside > div').scrollTo(0, 1e30);
     document.querySelector('#llm').style.removeProperty('display');
