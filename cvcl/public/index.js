@@ -85,21 +85,27 @@ window.addEventListener('load', async () => {
     });
   }
 
+  async function editTarget(params) {
+    const resp = await fetch('/edit?' + new URLSearchParams({
+      ...params,
+      latex,
+    }), {
+      headers: {
+        'X-Profile': profile,
+      },
+    });
+    if (!resp.ok)
+      return;
+    const ln = +await resp.text();
+    if (!ln)
+      return;
+    startEdit(ln);
+  }
+
   let asideOpen = true;
-  window.addEventListener('message', async (evt) => {
+  window.addEventListener('message', (evt) => {
     if (typeof evt.data === 'object') {
-      const resp = await fetch('/edit?' + new URLSearchParams({
-        ...evt.data,
-        latex,
-      }), {
-        headers: {
-          'X-Profile': profile,
-        },
-      });
-      if (!resp.ok) return;
-      const ln = +await resp.text();
-      if (!ln) return;
-      startEdit(ln);
+      editTarget(evt.data);
       return;
     }
     if (evt.data === true) {
@@ -251,6 +257,11 @@ window.addEventListener('load', async () => {
     }
     loading.innerText = '';
   });
+  document.querySelectorAll('section ul').forEach(el => el.addEventListener('dblclick', (evt) => {
+    if (evt.target.tagName === 'LI') {
+      editTarget({ target: evt.target.innerText });
+    }
+  }));
 
   recompile();
 

@@ -246,31 +246,38 @@ ${req.profile.projsDescription}
       res.sendStatus(410);
       return;
     }
-    const { stdout } = await exec(
-      `synctex edit -o ${req.query.page}:${req.query.x}:${req.query.y}:main.pdf`,
-      { cwd: dir });
-    const m = [...stdout.matchAll(/^Line:(?<line>[0-9]+)$/gm)];
-    if (m.length !== 1) {
-      res.status(500).send('synctex failed: ' + stdout);
-      return;
-    }
-    let { line } = m[0].groups;
     const split = cacheKey.split('\n');
-    while (line && split[line] === '') line--;
-    const mm = split[line].match(/^\\(?:p|ed|e|s|lc|section)[A-Z][a-z]*$/);
-    if (!mm) {
+    let target;
+    if (req.query.page) {
+      const { stdout } = await exec(
+        `synctex edit -o ${req.query.page}:${req.query.x}:${req.query.y}:main.pdf`,
+        { cwd: dir });
+      const m = [...stdout.matchAll(/^Line:(?<line>[0-9]+)$/gm)];
+      if (m.length !== 1) {
+        res.status(500).send('synctex failed: ' + stdout);
+        return;
+      }
+      let { line } = m[0].groups;
+      while (line && split[line] === '') line--;
+      target = split[line];
+    } else {
+      target = req.query.target;
+    }
+    const m = target.match(/^\\(?:p|ed|e|s|lc|section)[A-Z][a-zA-Z]*$/);
+    if (!m) {
+      console.error(`synctex: ${target}`);
       res.send('0');
       return;
     }
     let ln = 1;
     for (const l of split) {
-      if (l.startsWith(`\\def${split[line]}`)) {
+      if (l.startsWith(`\\def${target}`)) {
         res.send('' + ln);
         return;
       }
       ln++;
     }
-    res.send('0');
+    res.status(404).send(`\\def not found: ${target}`);
   });
 
   app.listen(3000, '0.0.0.0');
