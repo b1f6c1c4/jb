@@ -123,6 +123,25 @@ window.addEventListener('load', async () => {
       }
     }
   };
+  document.querySelector('#full').addEventListener('click', () => {
+    for (const section of document.querySelectorAll('section')) {
+      const avail = section.querySelector('ul:nth-child(2)');
+      const active = section.querySelector('div > ul:first-child');
+      for (const el of active.querySelectorAll('li') ?? [])
+        active.removeChild(el);
+      for (const el of avail.querySelectorAll('li') ?? []) {
+        if (el.innerText.startsWith('\\vspace')) {
+          el.classList.remove('selected');
+        } else {
+          el.classList.add('selected');
+          const e = document.createElement('li');
+          e.innerText = el.innerText;
+          active.appendChild(e);
+        }
+      }
+    }
+    recompile();
+  });
   for (const section of document.querySelectorAll('section')) {
     const avail = section.querySelector('ul:nth-child(2)');
     const active = section.querySelector('div > ul:first-child');
@@ -250,6 +269,7 @@ window.addEventListener('load', async () => {
       throw new Error(await resp.text());
     }
     dirty = true;
+    recompile();
   }
   function stopEdit() {
     if (dirty) {
@@ -334,11 +354,9 @@ window.addEventListener('load', async () => {
   }
   document.querySelector('#splitter').addEventListener('mousedown', (e) => {
     e.preventDefault();
-    console.log('d');
     iframe.style.pointerEvents = 'none';
     document.addEventListener('mousemove', setSplit);
     document.addEventListener('mouseup', () => {
-      console.log('u');
       iframe.style.removeProperty('pointer-events');
       document.removeEventListener('mousemove', setSplit);
     }, { once: true });
