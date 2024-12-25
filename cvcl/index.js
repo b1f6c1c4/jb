@@ -12,7 +12,11 @@ const profileCache = new LRUCache({
   max: 16384,
 });
 const pdfCache = new LRUCache({
-  max: 16384,
+  max: 32,
+  dispose: (dir) => {
+    console.error(`Evicting ${dir}`);
+    fs.rm(dir, { force: true, recursive: true });
+  },
 });
 
 async function parsePortfolio(fn) {
@@ -194,26 +198,29 @@ ${req.profile.projsDescription}
       res.sendStatus(400);
       return;
     }
-    const cacheKey = req.profile.rawPortfolio + req.query.latex;
+    const cacheKey = req.profile.rawPortfolio + '\n' + req.query.latex;
     const cacheResult = pdfCache.get(cacheKey);
     if (cacheResult !== undefined) {
-      res.set('Content-Type', 'application/pdf');
-      res.send(cacheResult);
+      res.sendFile(path.join(cacheResult, 'main.pdf'));
       return;
     }
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cvcl-'));
     try {
       await fs.writeFile(path.join(dir, 'main.tex'), cacheKey, 'utf8'),
       await exec(
-        'latexmk -halt-on-error -file-line-error -pdf -lualatex main.tex',
+        'latexmk -halt-on-error -file-line-error -pdf -lualatex -synctex=1 main.tex',
         { cwd: dir });
-      const pdf = await fs.readFile(path.join(dir, 'main.pdf'));
-      pdfCache.set(cacheKey, pdf);
-      res.set('Content-Type', 'application/pdf');
+      await Promise.all([
+        fs.access(path.join(dir, 'main.pdf'), fs.constants.R_OK),
+        fs.access(path.join(dir, 'main.synctex.gz'), fs.constants.R_OK),
+      ]);
+      console.log(cacheKey.length, dir);
+      pdfCache.set(cacheKey, dir);
       res.set('Cache-Control', 'no-cache');
       res.set('Vary', 'X-Profile');
-      res.send(pdf);
+      res.sendFile(path.join(dir, 'main.pdf'));
     } catch (err) {
+      console.dir(err);
       res.set('Content-Type', 'text/plain');
       try {
         const { stdout } = await exec(
@@ -224,9 +231,40 @@ ${req.profile.projsDescription}
         console.error(err);
         res.status(500).send(err.toString());
       }
-    } finally {
       await fs.rm(dir, { force: true, recursive: true });
     }
+  });
+
+  app.get('/edit', checkProfile, findProfile, async (req, res) => {
+    if (!req.query.latex) {
+      res.sendStatus(400);
+      return;
+    }
+    const cacheKey = req.profile.rawPortfolio + '\n' + req.query.latex;
+    const dir = pdfCache.get(cacheKey);
+    if (dir === undefined) {
+      res.sendStatus(410);
+      return;
+    }
+    const { stdout } = await exec(
+      `synctex edit -o ${req.query.page}:${req.query.x}:${req.query.y}:main.pdf`,
+      { cwd: dir });
+    const m = [...stdout.matchAll(/^Line:(?<line>[0-9]+)$/gm)];
+    if (m.length !== 1) {
+      res.status(500).send('synctex failed: ' + stdout);
+      return;
+    }
+    const split = cacheKey.split('\n');
+    res.send(split[+m[0].groups.line]);
+    return;
+    const preamble = req.profile.rawPortfolio.match(/\n/g).length ;
+    const line = m.groups.line - preamble - 1;
+    // const split = req.query.latex.split('\n');
+    if (line <= 0) {
+      res.status(500).send(`synctex line ${m.groups.line} <= preamble lines ${preamble}`);
+      return;
+    }
+    res.send(split[line]);
   });
 
   app.listen(3000, '0.0.0.0');

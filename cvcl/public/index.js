@@ -52,16 +52,7 @@ window.addEventListener('load', async () => {
   document.querySelector('#refresh').addEventListener('click', recompile);
   const iframe = document.querySelector('iframe');
 
-  let asideOpen = true;
-  window.addEventListener('message', (evt) => {
-    if (evt.data === true) {
-      asideOpen ^= true;
-      document.querySelector('aside').style.display = asideOpen ? 'initial' : 'none';
-    } else {
-      loading.innerText = evt.data;
-    }
-  });
-
+  let latex;
   function recompile() {
     loading.innerText = 'Preprocessing...';
     const find = (id) => {
@@ -71,7 +62,7 @@ window.addEventListener('load', async () => {
       window.localStorage.setItem(id, JSON.stringify(res));
       return res;
     };
-    let latex = '';
+    latex = '';
     for (const s of find('sections')) {
       latex += s;
       latex += '\n';
@@ -89,11 +80,32 @@ window.addEventListener('load', async () => {
       url: '/pdf?' + new URLSearchParams({ latex }),
       method: 'GET',
       headers: {
-        'Content-Type': 'text/plain',
         'X-Profile': profile,
       }, 
     });
   }
+
+  let asideOpen = true;
+  window.addEventListener('message', async (evt) => {
+    if (typeof evt.data === 'object') {
+      const resp = await fetch('/edit?' + new URLSearchParams({
+        ...evt.data,
+        latex,
+      }), {
+        headers: {
+          'X-Profile': profile,
+        },
+      });
+      console.log(JSON.stringify(evt.data) + await resp.text());
+      return;
+    }
+    if (evt.data === true) {
+      asideOpen ^= true;
+      document.querySelector('aside').style.display = asideOpen ? 'initial' : 'none';
+    } else {
+      loading.innerText = evt.data;
+    }
+  });
 
   for (const section of document.querySelectorAll('aside section')) {
     const id = section.id;
