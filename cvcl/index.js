@@ -1,3 +1,4 @@
+const https = require('node:https');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { LRUCache } = require('lru-cache');
@@ -27,7 +28,7 @@ async function parsePortfolio(fn) {
     return cacheResult.profile;
   }
   const rawPortfolio = await fs.readFile(fp, 'utf8');
-  const projs = rawPortfolio.match(/(?<=\\def)\\p[A-Z][a-zA-z]*/g);
+  const projs = rawPortfolio.match(/(?<=^\\def)\\p[A-Z][a-zA-z]*/gm);
   let projsDescription = '';
   if (projs)
     for (const proj of projs) {
@@ -48,11 +49,11 @@ async function parsePortfolio(fn) {
     rawPortfolio,
     projs,
     projsDescription,
-    edus: rawPortfolio.match(/(?<=\\def)\\ed[A-Z][a-zA-z]*/g),
-    exps: rawPortfolio.match(/(?<=\\def)\\e[A-Z][a-zA-z]*/g),
-    skills: rawPortfolio.match(/(?<=\\def)\\s[A-Z][a-zA-z]*/g),
-    lics: rawPortfolio.match(/(?<=\\def)\\lc[A-Z][a-zA-z]*/g),
-    sections: rawPortfolio.match(/(?<=\\def)\\section[A-Z][a-zA-z]*/g),
+    edus: rawPortfolio.match(/(?<=^\\def)\\ed[A-Z][a-zA-z]*/gm),
+    exps: rawPortfolio.match(/(?<=^\\def)\\e[A-Z][a-zA-z]*/gm),
+    skills: rawPortfolio.match(/(?<=^\\def)\\s[A-Z][a-zA-z]*/gm),
+    lics: rawPortfolio.match(/(?<=^\\def)\\lc[A-Z][a-zA-z]*/gm),
+    sections: rawPortfolio.match(/(?<=^\\def)\\section[A-Z][a-zA-z]*/gm),
     knownSections,
   };
   profileCache.set(fn, { mtime: st.mtimeNs, profile });
@@ -214,13 +215,11 @@ ${req.profile.projsDescription}
         fs.access(path.join(dir, 'main.pdf'), fs.constants.R_OK),
         fs.access(path.join(dir, 'main.synctex.gz'), fs.constants.R_OK),
       ]);
-      console.log(cacheKey.length, dir);
       pdfCache.set(cacheKey, dir);
       res.set('Cache-Control', 'no-cache');
       res.set('Vary', 'X-Profile');
       res.sendFile(path.join(dir, 'main.pdf'));
     } catch (err) {
-      console.dir(err);
       res.set('Content-Type', 'text/plain');
       try {
         const { stdout } = await exec(
@@ -280,5 +279,18 @@ ${req.profile.projsDescription}
     res.status(404).send(`\\def not found: ${target}`);
   });
 
-  app.listen(3000, '0.0.0.0');
+  const [key, cert, ca, dhparam] = await Promise.all([
+    'server.key',
+    'server.crt',
+    'client.crt',
+    'dhparam.pem',
+  ].map(f => fs.readFile(path.join(__dirname, 'cert', f))));
+  https.createServer({
+    requestCert: true,
+    minVersion: 'TLSv1.3',
+    key,
+    cert,
+    ca,
+    dhparam,
+  }, app).listen(18080, '0.0.0.0');
 })();
