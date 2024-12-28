@@ -28,47 +28,43 @@ async function parsePortfolio(fn) {
     return cacheResult.profile;
   }
   const rawPortfolio = await fs.readFile(fp, 'utf8');
-  const projs = rawPortfolio.match(/(?<=^\\def)\\p[A-Z][a-zA-z]*/gm);
-  let projsDescription = '';
-  if (projs)
-    for (const proj of projs) {
-      const id = rawPortfolio.indexOf(proj) + proj.length;
-      projsDescription += `---- BEGIN PROJECT \`${proj}\` ----\n`;
-      projsDescription += rawPortfolio.substr(id)
-        .match(/^[\s\S]+?\n\n/m)[0]
-        .replace(/\\par\b/g, '')
-        .replace(/\\g?hhref\{[^}]*\}/, '').trim();
-      projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
-    }
-  const exps = rawPortfolio.match(/(?<=^\\def)\\e[A-Z][a-zA-z]*/gm);
-  let expsDescription = '';
-  if (exps)
-    for (const exp of exps) {
-      const id = rawPortfolio.indexOf(exp) + exp.length;
-      expsDescription += `---- BEGIN JOB EXPERIENCE \`${exp}\` ----\n`;
-      expsDescription += rawPortfolio.substr(id)
-        .match(/^[\s\S]+?\n\n/m)[0]
-        .replace(/\\par\b/g, '')
-        .replace(/\\g?hhref\{[^}]*\}/, '').trim();
-      expsDescription += `\n---- END JOB EXPERIENCE \`${exp}\` ----\n`;
-    }
-  const knownSections = {};
-  for (const m of rawPortfolio.matchAll(/^% (?<id>[a-z]+)\s+=\s+(?<expr>.*)$/gm)) {
-    knownSections[m.groups.expr] = m.groups.id;
-  }
   const profile = {
     file: fp,
     rawPortfolio,
-    projs,
-    projsDescription,
-    exps,
-    expsDescription,
     edus: rawPortfolio.match(/(?<=^\\def)\\ed[A-Z][a-zA-z]*/gm),
     skills: rawPortfolio.match(/(?<=^\\def)\\s[A-Z][a-zA-z]*/gm),
     lics: rawPortfolio.match(/(?<=^\\def)\\lc[A-Z][a-zA-z]*/gm),
     sections: rawPortfolio.match(/(?<=^\\def)\\section[A-Z][a-zA-z]*/gm),
-    knownSections,
+    knownSections: {},
   };
+  function parsePair(id, regex, nm, single) {
+    profile[id] = rawPortfolio.match(regex);
+    if (!profile[id]) return;
+    let description = '';
+    for (const obj of profile[id]) {
+      const i = rawPortfolio.indexOf(obj) + obj.length;
+      description += `---- BEGIN ${nm} \`${obj}\` ----\n`;
+      if (!single) {
+        description += rawPortfolio.substr(i)
+          .match(/^[\s\S]+?\n\n/m)[0]
+          .replace(/\\par\b/g, '')
+          .replace(/\\g?hhref\{[^}]*\}/, '').trim();
+      } else {
+        description += rawPortfolio.substr(i)
+          .match(/^.*$/m)[0]
+          .replace(/\\par\b/g, '')
+          .replace(/\\g?hhref\{[^}]*\}/, '').trim();
+      }
+      description += `\n---- END ${nm} \`${obj}\` ----\n`;
+    }
+    profile[id + 'Description'] = description;
+  }
+  parsePair('projs', /(?<=^\\def)\\p[A-Z][a-zA-z]*/gm, 'PROJECT');
+  parsePair('exps', /(?<=^\\def)\\e[A-Z][a-zA-z]*/gm, 'JOB EXPERIENCE');
+  parsePair('crss', /(?<=^\\def)\\crs[A-Z][a-zA-z]*/gm, 'COURSE', true);
+  for (const m of rawPortfolio.matchAll(/^% (?<id>[a-z]+)\s+=\s+(?<expr>.*)$/gm)) {
+    profile.knownSections[m.groups.expr] = m.groups.id;
+  }
   profileCache.set(fn, { mtime: st.mtimeNs, profile });
   return profile;
 }
@@ -183,16 +179,16 @@ Revised resume paragraph:
     }
   });
 
-  app.post('/projs', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
-    const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given a job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
+  const mkAuto = (id, section, pmt) => async (req, res) => {
+    const prompt = `${pmt}
 
 #### BEGIN JOB DESCRIPTION ####
 ${req.body}
 #### END JOB DESCRIPTION ####
 
-#### BEGIN PORTFOLIO ####
-${req.profile.projsDescription}
-#### END PORTFOLIO ####
+#### BEGIN ${section} ####
+${req.profile[id + 'Description']}
+#### END ${section} ####
 
 #### BEGIN OUTPUT ####
 `;
@@ -201,35 +197,24 @@ ${req.profile.projsDescription}
     const recommendation = [];
     for (const rr of txt.trim().split('\n')) {
       const r = rr.trim().replace(/^`|`$/g, '');
-      if (req.profile.projs.includes(r))
+      if (req.profile[id].includes(r))
         recommendation.push(r);
     }
-    res.json(recommendation);
-  });
-
-  app.post('/exps', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
-    const prompt = `You are a professional career advisor. You need to decide which past job experience from a list is the best match given a job description. Output a list of job experience identifiers (the short strings starting with \`\\e\`) only. You can either sort by in chronological order or put the most relevant job experience first.
-
-#### BEGIN JOB DESCRIPTION ####
-${req.body}
-#### END JOB DESCRIPTION ####
-
-#### BEGIN RESUME ####
-${req.profile.expsDescription}
-#### END RESUME ####
-
-#### BEGIN OUTPUT ####
-`;
-    const result = await model.generateContent(prompt);
-    const txt = result.response.text();
-    const recommendation = [];
-    for (const rr of txt.trim().split('\n')) {
-      const r = rr.trim().replace(/^`|`$/g, '');
-      if (req.profile.exps.includes(r))
-        recommendation.push(r);
+    if (!recommendation.length) {
+      console.log(prompt);
+      console.log(txt);
     }
     res.json(recommendation);
-  });
+  }
+
+  app.post('/projs', checkProfile, findProfile, bodyParser.text(), mkAuto('projs', 'PORTFOLIO',
+    `You are a professional career advisor. You need to decide which projects from a portfolio are the best match given a job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.`));
+
+  app.post('/exps', checkProfile, findProfile, bodyParser.text(), mkAuto('exps', 'RESUME',
+    `You are a professional career advisor. You need to decide which past job experiences from a list are the best match given a job description. Output a list of job experience identifiers (the short strings starting with \`\\e\`) only. You can either sort by in chronological order or put the most relevant job experience first.`));
+
+  app.post('/crss', checkProfile, findProfile, bodyParser.text(), mkAuto('crss', 'RESUME',
+    `You are a professional career advisor. You need to decide which courses from a student's transcript are the best match given a job description. Output a list of course identifiers (the short strings starting with \`\\crs\`) only. A maximum of 16 courses is permitted. Put the most relevant job experience first.`));
 
   app.get('/pdf', checkProfile, findProfile, async (req, res) => {
     if (!req.query.latex) {

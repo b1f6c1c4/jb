@@ -259,6 +259,7 @@ window.addEventListener('load', async () => {
   };
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
   document.getElementById('auto_projs').addEventListener('click', mkHandleAuto('projs'));
+  document.getElementById('auto_crss').addEventListener('click', mkHandleAuto('crss'));
 
   document.querySelectorAll('section ul').forEach(el => el.addEventListener('dblclick', (evt) => {
     if (evt.target.tagName === 'LI') {
@@ -335,6 +336,7 @@ window.addEventListener('load', async () => {
 % exps   = \\section{Experience}  % <- \\def\\eXXXX
 % skills = \\section{Skills}      % <- \\def\\sXXXX
 % lics   = \\section{Licenses}    % <- \\def\\lcXXXX
+% crss   = \\section{Courses}     % <- \\def\\crsXXXX
 
 % For extra sections:
 % \\sectionXXXX
