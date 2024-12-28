@@ -219,13 +219,13 @@ window.addEventListener('load', async () => {
     });
   }
 
-  document.getElementById('auto_projs').addEventListener('click', async () => {
+  const mkHandleAuto = (id) => async () => {
     const jd = prompt('Paste the job description here:');
     if (!jd) {
       return;
     }
     loading.innerText = 'Analyzing...';
-    const resp = await fetch('/projs', {
+    const resp = await fetch(`/${id}`, {
       method: 'POST',
       body: jd,
       headers: {
@@ -243,12 +243,12 @@ window.addEventListener('load', async () => {
       loading.innerText = 'No recommendation';
       return;
     }
-    for (const el of document.querySelectorAll('section#projs > ul:nth-child(2) > li')) {
+    for (const el of document.querySelectorAll(`section#${id} > ul:nth-child(2) > li`)) {
       el.classList.remove('selected');
       if (answer.includes(el.innerText))
         el.classList.add('selected');
     }
-    const active = document.querySelector('section#projs > div > ul:first-child');
+    const active = document.querySelector(`section#${id} > div > ul:first-child`);
     active.innerHTML = '';
     for (const obj of answer) {
       const el = document.createElement('li');
@@ -256,7 +256,10 @@ window.addEventListener('load', async () => {
       active.appendChild(el);
     }
     loading.innerText = '';
-  });
+  };
+  document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
+  document.getElementById('auto_projs').addEventListener('click', mkHandleAuto('projs'));
+
   document.querySelectorAll('section ul').forEach(el => el.addEventListener('dblclick', (evt) => {
     if (evt.target.tagName === 'LI') {
       editTarget({ target: evt.target.innerText });

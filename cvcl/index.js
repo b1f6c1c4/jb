@@ -35,10 +35,22 @@ async function parsePortfolio(fn) {
       const id = rawPortfolio.indexOf(proj) + proj.length;
       projsDescription += `---- BEGIN PROJECT \`${proj}\` ----\n`;
       projsDescription += rawPortfolio.substr(id)
-        .match(/(?<=\\project)[\s\S]+?\n\n/m)[0]
+        .match(/^[\s\S]+?\n\n/m)[0]
         .replace(/\\par\b/g, '')
         .replace(/\\g?hhref\{[^}]*\}/, '').trim();
       projsDescription += `\n---- END PROJECT \`${proj}\` ----\n`;
+    }
+  const exps = rawPortfolio.match(/(?<=^\\def)\\e[A-Z][a-zA-z]*/gm);
+  let expsDescription = '';
+  if (exps)
+    for (const exp of exps) {
+      const id = rawPortfolio.indexOf(exp) + exp.length;
+      expsDescription += `---- BEGIN JOB EXPERIENCE \`${exp}\` ----\n`;
+      expsDescription += rawPortfolio.substr(id)
+        .match(/^[\s\S]+?\n\n/m)[0]
+        .replace(/\\par\b/g, '')
+        .replace(/\\g?hhref\{[^}]*\}/, '').trim();
+      expsDescription += `\n---- END JOB EXPERIENCE \`${exp}\` ----\n`;
     }
   const knownSections = {};
   for (const m of rawPortfolio.matchAll(/^% (?<id>[a-z]+)\s+=\s+(?<expr>.*)$/gm)) {
@@ -49,8 +61,9 @@ async function parsePortfolio(fn) {
     rawPortfolio,
     projs,
     projsDescription,
+    exps,
+    expsDescription,
     edus: rawPortfolio.match(/(?<=^\\def)\\ed[A-Z][a-zA-z]*/gm),
-    exps: rawPortfolio.match(/(?<=^\\def)\\e[A-Z][a-zA-z]*/gm),
     skills: rawPortfolio.match(/(?<=^\\def)\\s[A-Z][a-zA-z]*/gm),
     lics: rawPortfolio.match(/(?<=^\\def)\\lc[A-Z][a-zA-z]*/gm),
     sections: rawPortfolio.match(/(?<=^\\def)\\section[A-Z][a-zA-z]*/gm),
@@ -171,7 +184,7 @@ Revised resume paragraph:
   });
 
   app.post('/projs', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
-    const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given the job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
+    const prompt = `You are a professional career advisor. You need to decide which project from a portfolio is the best match given a job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.
 
 #### BEGIN JOB DESCRIPTION ####
 ${req.body}
@@ -189,6 +202,30 @@ ${req.profile.projsDescription}
     for (const rr of txt.trim().split('\n')) {
       const r = rr.trim().replace(/^`|`$/g, '');
       if (req.profile.projs.includes(r))
+        recommendation.push(r);
+    }
+    res.json(recommendation);
+  });
+
+  app.post('/exps', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
+    const prompt = `You are a professional career advisor. You need to decide which past job experience from a list is the best match given a job description. Output a list of job experience identifiers (the short strings starting with \`\\e\`) only. You can either sort by in chronological order or put the most relevant job experience first.
+
+#### BEGIN JOB DESCRIPTION ####
+${req.body}
+#### END JOB DESCRIPTION ####
+
+#### BEGIN RESUME ####
+${req.profile.expsDescription}
+#### END RESUME ####
+
+#### BEGIN OUTPUT ####
+`;
+    const result = await model.generateContent(prompt);
+    const txt = result.response.text();
+    const recommendation = [];
+    for (const rr of txt.trim().split('\n')) {
+      const r = rr.trim().replace(/^`|`$/g, '');
+      if (req.profile.exps.includes(r))
         recommendation.push(r);
     }
     res.json(recommendation);
