@@ -20,6 +20,14 @@ const pdfCache = new LRUCache({
   },
 });
 
+async function cleanUp() {
+  console.error('Cleaning');
+  const lst = await fs.readdir(os.tmpdir());
+  await Promise.all(lst.map((d) => d.startsWith('cvcl-') &&
+    fs.rm(path.join(os.tmpdir(), d), { force: true, recursive: true })));
+  console.error('Done cleaning');
+}
+
 async function parsePortfolio(fn) {
   const cacheResult = profileCache.get(fn);
   const fp = path.join(__dirname, 'data', fn);
@@ -301,6 +309,7 @@ ${req.profile[id + 'Description']}
     res.status(404).send(`\\def not found: ${target}`);
   });
 
+  await cleanUp();
   const [key, cert, ca, dhparam] = await Promise.all([
     'server.key',
     'server.crt',

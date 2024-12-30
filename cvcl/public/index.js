@@ -174,6 +174,14 @@ window.addEventListener('load', async () => {
             e.classList.remove('selected');
         active.removeChild(el);
       }
+      recompile();
+    });
+    discard.addEventListener('dblclick', () => {
+      for (const el of active.querySelectorAll('li') ?? [])
+        active.removeChild(el);
+      for (const el of avail.querySelectorAll('li') ?? [])
+        el.classList.remove('selected');
+      recompile();
     });
     Sortable.create(avail, {
       multiDrag: true,
@@ -256,6 +264,7 @@ window.addEventListener('load', async () => {
       active.appendChild(el);
     }
     loading.innerText = '';
+    recompile();
   };
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
   document.getElementById('auto_projs').addEventListener('click', mkHandleAuto('projs'));
@@ -380,11 +389,13 @@ window.addEventListener('load', async () => {
       alert(resp.status + ':' + await resp.text());
   }
 
+  setSplit({ clientX: window.localStorage.getItem('width') || 140 });
   function setSplit(e) {
     const w = e.clientX < 140 ? '140px' : `${e.clientX}px`;
     document.querySelector('aside').style.width = w;
     document.querySelector('aside').style.minWidth = w;
     document.querySelector('aside').style.maxWidth = w;
+    window.localStorage.setItem('width', e.clientX);
   }
   document.querySelector('#splitter').addEventListener('mousedown', (e) => {
     e.preventDefault();

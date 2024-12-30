@@ -96,6 +96,7 @@ h2 {
   margin: 0;
   padding: 0;
   white-space: nowrap;
+  user-select: none;
 }
 
 ul {
@@ -154,6 +155,7 @@ li {
   -ms-overflow-style: none;
   scrollbar-width: none;
   white-space: nowrap;
+  user-select: none;
 }
 
 .sortable-selected {
