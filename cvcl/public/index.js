@@ -227,11 +227,7 @@ window.addEventListener('load', async () => {
     });
   }
 
-  const mkHandleAuto = (id) => async () => {
-    const jd = prompt('Paste the job description here:');
-    if (!jd) {
-      return;
-    }
+  const handleAuto = async (id, jd) => {
     loading.innerText = 'Analyzing...';
     const resp = await fetch(`/${id}`, {
       method: 'POST',
@@ -264,11 +260,33 @@ window.addEventListener('load', async () => {
       active.appendChild(el);
     }
     loading.innerText = '';
+  }
+  const mkHandleAuto = (id, skip) => async () => {
+    const jd = prompt('Paste the job description here:');
+    if (!jd) {
+      return;
+    }
+    await handleAuto(id, jd);
     recompile();
   };
+  document.getElementById('auto').addEventListener('click', () => {
+    const jd = prompt('Paste the job description here:');
+    if (!jd) {
+      return;
+    }
+    Promise.all([
+      handleAuto('edus', jd),
+      handleAuto('exps', jd),
+      handleAuto('projs', jd),
+      handleAuto('crss', jd),
+      handleAuto('lics', jd),
+    ]).then(recompile);
+  });
+  document.getElementById('auto_edus').addEventListener('click', mkHandleAuto('edus'));
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
   document.getElementById('auto_projs').addEventListener('click', mkHandleAuto('projs'));
   document.getElementById('auto_crss').addEventListener('click', mkHandleAuto('crss'));
+  document.getElementById('auto_lics').addEventListener('click', mkHandleAuto('lics'));
 
   document.querySelectorAll('section ul').forEach(el => el.addEventListener('dblclick', (evt) => {
     if (evt.target.tagName === 'LI') {

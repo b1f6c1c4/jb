@@ -39,9 +39,7 @@ async function parsePortfolio(fn) {
   const profile = {
     file: fp,
     rawPortfolio,
-    edus: rawPortfolio.match(/(?<=^\\def)\\ed[A-Z][a-zA-z]*/gm),
     skills: rawPortfolio.match(/(?<=^\\def)\\s[A-Z][a-zA-z]*/gm),
-    lics: rawPortfolio.match(/(?<=^\\def)\\lc[A-Z][a-zA-z]*/gm),
     sections: rawPortfolio.match(/(?<=^\\def)\\section[A-Z][a-zA-z]*/gm),
     knownSections: {},
   };
@@ -67,6 +65,8 @@ async function parsePortfolio(fn) {
     }
     profile[id + 'Description'] = description;
   }
+  parsePair('edus', /(?<=^\\def)\\ed[A-Z][a-zA-z]*/gm, 'CONFERRED DEGREE');
+  parsePair('lics', /(?<=^\\def)\\lc[A-Z][a-zA-z]*/gm, 'LICENSE / CERTIFICATE');
   parsePair('projs', /(?<=^\\def)\\p[A-Z][a-zA-z]*/gm, 'PROJECT');
   parsePair('exps', /(?<=^\\def)\\e[A-Z][a-zA-z]*/gm, 'JOB EXPERIENCE');
   parsePair('crss', /(?<=^\\def)\\crs[A-Z][a-zA-z]*/gm, 'COURSE', true);
@@ -219,10 +219,16 @@ ${req.profile[id + 'Description']}
     `You are a professional career advisor. You need to decide which projects from a portfolio are the best match given a job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.`));
 
   app.post('/exps', checkProfile, findProfile, bodyParser.text(), mkAuto('exps', 'RESUME',
-    `You are a professional career advisor. You need to decide which past job experiences from a list are the best match given a job description. Output a list of job experience identifiers (the short strings starting with \`\\e\`) only. You can either sort by in chronological order or put the most relevant job experience first.`));
+    `You are a professional career advisor. You need to decide which past job experiences from a list are the best match given a job description. Output a list of job experience identifiers (the short strings starting with \`\\e\`) only. You can either sort by in reverse chronological order or put the most relevant job experience first.`));
 
-  app.post('/crss', checkProfile, findProfile, bodyParser.text(), mkAuto('crss', 'RESUME',
+  app.post('/edus', checkProfile, findProfile, bodyParser.text(), mkAuto('edus', 'RESUME',
+    `You are a professional career advisor. You need to decide which educational degree from a list are the best match given a job description. Output a list of conferred degree identifiers (the short strings starting with \`\\ed\`) only. You must sort it in reverse chronological order.`));
+
+  app.post('/crss', checkProfile, findProfile, bodyParser.text(), mkAuto('crss', 'TRANSCRIPT',
     `You are a professional career advisor. You need to decide which courses from a student's transcript are the best match given a job description. Output a list of course identifiers (the short strings starting with \`\\crs\`) only. A maximum of 16 courses is permitted. Put the most relevant job experience first.`));
+
+  app.post('/lics', checkProfile, findProfile, bodyParser.text(), mkAuto('lics', 'RESUME',
+    `You are a professional career advisor. You need to decide which licenses and certificates from a resume are the best match given a job description. Output a list of license & certificate identifiers (the short strings starting with \`\\lc\`) only. Put the most relevant job experience first.`));
 
   app.get('/pdf', checkProfile, findProfile, async (req, res) => {
     if (!req.query.latex) {
