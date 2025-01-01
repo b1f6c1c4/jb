@@ -1,5 +1,6 @@
 const https = require('node:https');
 const express = require('express');
+const moment = require('moment');
 const bodyParser = require('body-parser');
 const { LRUCache } = require('lru-cache');
 const fs = require('node:fs/promises');
@@ -19,6 +20,7 @@ const pdfCache = new LRUCache({
     fs.rm(dir, { force: true, recursive: true });
   },
 });
+const latexCache = {};
 
 async function cleanUp() {
   console.error('Cleaning');
@@ -114,6 +116,7 @@ function findProfile(req, res, next) {
 
   const app = express();
 
+  app.set('view engine', 'ejs');
   app.use(express.static(path.join(__dirname, 'public')));
   app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
@@ -235,6 +238,7 @@ ${req.profile[id + 'Description']}
       res.sendStatus(400);
       return;
     }
+    latexCache[req.params.profile] = req.query.latex;
     const cacheKey = req.profile.rawPortfolio + '\n' + req.query.latex;
     const cacheResult = pdfCache.get(cacheKey);
     if (cacheResult !== undefined) {
@@ -255,7 +259,7 @@ ${req.profile[id + 'Description']}
       res.set('Cache-Control', 'no-cache');
       res.sendFile(path.join(dir, 'main.pdf'));
     } catch (err) {
-      res.set('Content-Type', 'text/plain');
+      res.type('text/plain');
       try {
         const { stdout } = await exec(
           `texfot --quiet --ignore '^(Over|Under)full ' --ignore '^This is [a-zA-Z]+TeX, Version ' --ignore '^Output written on ' cat main.log`,
@@ -267,6 +271,46 @@ ${req.profile[id + 'Description']}
       }
       await fs.rm(dir, { force: true, recursive: true });
     }
+  });
+
+  app.get('/profile/:profile/code', checkProfile, findProfile, async (req, res) => {
+    const latex = req.query.latex ?? latexCache[req.params.profile];
+    if (!latex) {
+      res.sendStatus(400);
+      return;
+    }
+    const getCodes = (regex) => {
+      const m = req.profile.rawPortfolio.match(regex);
+      if (!m) return [];
+      return [...req.profile.rawPortfolio.substr(m.index)
+        .match(/^[\s\S]+?\n\n/m)[0]
+        .matchAll(/^%> (?<head>[^:]*): (?<text>.*)$/gm)]
+        .map(({ groups: { head, text } }) => {
+          if (text.match(/^20[0-9][0-9][0-2][0-9][0-3][0-9]$/)) {
+            return { head, format: (f) => moment(text).format(f) };
+          } else {
+            return { head, text: text.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/(?<!\\)\\t/g, '\t') };
+          }
+        });
+    };
+    const data = {
+      sections: [{
+        head: 'Default',
+        lines: getCodes(/^%>>+$/m),
+      }],
+    };
+    for (const ll of latex.split('\n')) {
+      if (ll.match(/^\\(?:ed|e|p|lc|crs|s)[A-Z][a-zA-Z]*$/m)) {
+        const lines = getCodes(new RegExp(`^\\\\def\\${ll}`, 'm'));
+        if (lines.length) {
+          data.sections.push({
+            head: ll,
+            lines,
+          });
+        }
+      }
+    }
+    res.render('code.ejs', data);
   });
 
   app.get('/profile/:profile/edit', checkProfile, findProfile, async (req, res) => {

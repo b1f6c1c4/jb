@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="/code.css" />
+    <script src="/node_modules/@bwip-js/browser/dist/bwip-js.js" defer></script>
+    <script defer>
+      window.addEventListener('load', () => {
+        for (const canvas of document.querySelectorAll('canvas')) {
+          canvas.height = 1;
+          canvas.width = 1;
+          const text = canvas.getAttribute('x-text');
+          const shownText = text.replaceAll(/\t/g, '→').replaceAll(/\n/g, '↩');
+          const options = {
+            text,
+            scaleX: 3,
+            scaleY: 3,
+            includetext: false,
+            textalign: 'center',
+          };
+          if (text.length < 30) {
+            options.bcid = 'datamatrix';
+            const el = document.createElement('pre');
+            el.innerText = shownText;
+            canvas.parentElement.appendChild(el);
+          } else if (text.length < 100) {
+            options.bcid = 'datamatrix';
+            const el = document.createElement('pre');
+            el.innerText = shownText;
+            canvas.parentElement.appendChild(el);
+          } else {
+            options.bcid = 'pdf417';
+            canvas.classList.add('pdf417');
+            options.columns = 6;
+          }
+          bwipjs.toCanvas(canvas, options);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <% sections.forEach((s) => { %>
+    <section>
+      <h1><%= s.head %></h1>
+      <% s.lines.forEach((l) => { %>
+      <div class="row">
+        <p><%= l.head %></p>
+        <% if (!l.format) { %>
+        <div>
+        <%   l.text.split('|').forEach((g) => { %>
+          <span><canvas x-text="<%= g %>"></canvas></span>
+        <%   }); %>
+        </div>
+        <% } else { %>
+        <div class="date">
+          <span><canvas x-text="<%= l.format('MMDDYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MMM\tDD\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MMM\tD\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MM\tDD\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('M\tDD\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MMYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MMM\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MM\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('M\tYYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('YYYYMM') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('MM/YYYY') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('YYYY\tMMM') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('YYYY\tMM') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('YYYY\tM') %>"></canvas></span>
+          <span><canvas x-text="<%= l.format('YYYY/MM') %>"></canvas></span>
+        </div>
+        <% } %>
+      </div>
+      <% }); %>
+    </section>
+    <% }); %>
+  </body>
+</html>

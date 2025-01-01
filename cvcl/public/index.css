@@ -231,6 +231,10 @@ nav select {
   mask-image: url(web/images/secondaryToolbarButton-rotateCcw.svg);
 }
 
+#code::before {
+  mask-image: url(web/images/toolbarButton-presentationMode.svg);
+}
+
 #llm::before {
   mask-image: url(web/images/annotation-newparagraph.svg);
 }

@@ -50,10 +50,11 @@ window.addEventListener('load', async () => {
   });
 
   document.querySelector('#refresh').addEventListener('click', recompile);
+  document.querySelector('#code').addEventListener('click', () => recompile(true));
   const iframe = document.querySelector('iframe');
 
   let latex;
-  function recompile() {
+  function recompile(barcode) {
     loading.innerText = 'Preprocessing...';
     const find = (id) => {
       const res = [...document.querySelectorAll(
@@ -76,6 +77,10 @@ window.addEventListener('load', async () => {
       latex += '\n';
     }
     latex += '\\end{document}';
+    if (barcode === true) {
+      window.open(`/profile/${profile}/code?` + new URLSearchParams({ latex }), '_blank');
+      return;
+    }
     iframe.contentWindow.postMessage({
       url: `/profile/${profile}/pdf?` + new URLSearchParams({ latex }),
       method: 'GET',
