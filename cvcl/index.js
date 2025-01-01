@@ -136,8 +136,8 @@ function findProfile(req, res, next) {
       // ignore
     }
     await fs.writeFile(fp, req.body, 'utf8');
-    res.sendStatus(204);
     ev.emit(req.params.profile);
+    res.sendStatus(204);
   });
 
   app.get('/profile/:profile', checkProfile, findProfile, (req, res) => {
@@ -243,6 +243,7 @@ ${req.profile[id + 'Description']}
       return;
     }
     latexCache[req.params.profile] = req.query.latex;
+    ev.emit(req.params.profile);
     const cacheKey = req.profile.rawPortfolio + '\n' + req.query.latex;
     const cacheResult = pdfCache.get(cacheKey);
     if (cacheResult !== undefined) {
@@ -316,6 +317,9 @@ ${req.profile[id + 'Description']}
       res.sendStatus(400);
       return;
     }
+    const detex = (s) => s
+      .replace(/\s*(?:\\\\|\n)\s*/g, ' ')
+      .replace(/\\[a-z]+\{([^}])*\}/g, '$1');
     const getCodes = (regex) => {
       const m = req.profile.rawPortfolio.match(regex);
       if (!m) return [];
@@ -324,20 +328,51 @@ ${req.profile[id + 'Description']}
       const lines = [...paragraph.matchAll(/^%> (?<head>[^:]*): (?<text>.*)$/gm)]
         .map(({ groups: { head, text } }) => {
           if (text.match(/^20[0-9][0-9][0-2][0-9][0-3][0-9]$/)) {
-            return { head, format: (f) => moment(text).format(f) };
+            return { head, format: (f) => moment(text).format(f) + '\t' };
           } else {
-            return { head, text: text.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/(?<!\\)\\t/g, '\t') };
+            const line = { head, texts: [] };
+            text.split('|').forEach((t) => {
+              let seq = t
+                .replaceAll(/(?<!\\)\\n/g, '\n')
+                .replaceAll(/(?<!\\)\\r/g, '\r')
+                .replaceAll(/(?<!\\)\\t/g, '\t');
+              if (seq.endsWith('\t')) {
+                line.texts.push(seq.substr(0, seq.length - 1));
+                return;
+              }
+              if (seq.endsWith('\r')) {
+                line.texts.push(seq.replace(/\r$/, '\n'));
+                line.texts.push(seq.substr(0, seq.length - 1));
+                return;
+              }
+              if (!seq.endsWith('\n'))
+                seq += '\t';
+              line.texts.push(seq);
+            });
+            return line;
           }
         });
-      const detail = paragraph.match(/(?<=\n\s+\\item\s+)(?:.|\n)*?(?=\\end|\n\s+\\item|$)/);
+      const detail = paragraph.match(/(?<=\n\s+\\item\s+)(?:.|\n)*?(?=\\end|\n\s+\\item|$)/g);
       if (detail) {
-        lines.push({ head: 'detail', text: detail[0] });
+        lines.push({
+          head: 'detail',
+          texts: [detail.map((d) => '- ' + detex(d)).join('\n')],
+        });
       }
       return lines;
     };
     const data = {
       profile: req.params.profile,
-      disp: (s) => s.replaceAll(/\t/g, '→').replaceAll(/\n/g, '↩'),
+      disp: (s) => {
+        if (!s.match(/(?:\t|\n)$/))
+          s += '↫';
+        else
+          s = s.replace(/\t$/, '')
+        s = s.replaceAll(/\t/g, '→')
+          .replaceAll(/\r?\n/g, '↲');
+        return s;
+      },
+      url: encodeURIComponent,
       sections: [{
         head: 'Default',
         lines: getCodes(/^%>>+$/m),
@@ -357,7 +392,7 @@ ${req.profile[id + 'Description']}
     res.render('code.ejs', data);
   });
 
-  app.get('/profile/:profile/put', checkProfile, (req, res) => {
+  app.get('/profile/:profile/change', checkProfile, (req, res) => {
     res.writeHead(200, {
       'Connection': 'keep-alive',
       'Cache-Control': 'no-store',

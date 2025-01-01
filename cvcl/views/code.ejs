@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="/code.css" />
     <script defer>
       (async function () {
-        const resp = await fetch('/profile/<%= profile %>/put');
+        const resp = await fetch('/profile/<%= profile %>/change');
         if (resp.ok) {
           await resp.text();
           window.location.reload();
@@ -21,13 +21,13 @@
         <p><%= l.head %></p>
         <% if (!l.format) { %>
         <div>
-        <%   l.text.split('|').forEach((g) => { %>
+        <%   l.texts.forEach((g) => { %>
         <%     if (g.length >= 100) { %>
-          <span><img class="pdf417" src="/pdf417?t=<%= g %>"></span>
+          <span><img class="pdf417" src="/pdf417?t=<%= url(g) %>"></span>
         <%     } else { %>
           <span>
             <pre><%= disp(g) %></pre>
-            <img src="/code?t=<%= g %>">
+            <img src="/code?t=<%= url(g) %>">
           </span>
         <%     } %>
         <%   }); %>
@@ -36,49 +36,49 @@
         <div class="date">
           <span>
             <pre><%= disp(l.format('MMDDYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MMDDYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MMDDYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('MMM\tDD\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MMM\tDD\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MMM\tDD\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('MMM\tD\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MMM\tD\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MMM\tD\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('MM\tDD\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MM\tDD\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MM\tDD\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('M\tDD\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('M\tDD\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('M\tDD\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('MMYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MMYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MMYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('MMM\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MMM\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MMM\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('MM\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MM\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MM\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('M\tYYYY')) %></pre>
-            <img src="/code?t=<%= l.format('M\tYYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('M\tYYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('YYYYMM')) %></pre>
-            <img src="/code?t=<%= l.format('YYYYMM') %>"></span>
+            <img src="/code?t=<%= url(l.format('YYYYMM')) %>"></span>
           <span>
             <pre><%= disp(l.format('MM/YYYY')) %></pre>
-            <img src="/code?t=<%= l.format('MM/YYYY') %>"></span>
+            <img src="/code?t=<%= url(l.format('MM/YYYY')) %>"></span>
           <span>
             <pre><%= disp(l.format('YYYY\tMMM')) %></pre>
-            <img src="/code?t=<%= l.format('YYYY\tMMM') %>"></span>
+            <img src="/code?t=<%= url(l.format('YYYY\tMMM')) %>"></span>
           <span>
             <pre><%= disp(l.format('YYYY\tMM')) %></pre>
-            <img src="/code?t=<%= l.format('YYYY\tMM') %>"></span>
+            <img src="/code?t=<%= url(l.format('YYYY\tMM')) %>"></span>
           <span>
             <pre><%= disp(l.format('YYYY\tM')) %></pre>
-            <img src="/code?t=<%= l.format('YYYY\tM') %>"></span>
+            <img src="/code?t=<%= url(l.format('YYYY\tM')) %>"></span>
           <span>
             <pre><%= disp(l.format('YYYY/MM')) %></pre>
-            <img src="/code?t=<%= l.format('YYYY/MM') %>"></span>
+            <img src="/code?t=<%= url(l.format('YYYY/MM')) %>"></span>
         </div>
         <% } %>
       </div>
