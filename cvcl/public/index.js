@@ -243,10 +243,6 @@ window.addEventListener('load', async () => {
     }
     loading.innerText = 'Downloading...';
     const answer = await resp.json();
-    if (!answer.length) {
-      loading.innerText = 'No recommendation';
-      return;
-    }
     for (const el of document.querySelectorAll(`section#${id} > ul:nth-child(2) > li`)) {
       el.classList.remove('selected');
       if (answer.includes(el.innerText))
@@ -259,10 +255,19 @@ window.addEventListener('load', async () => {
       el.innerText = obj;
       active.appendChild(el);
     }
-    loading.innerText = '';
+    if (!answer.length) {
+      loading.innerText = 'No recommendation';
+    } else {
+      loading.innerText = '';
+    }
+  }
+  let jd = '';
+  const getJD = () => {
+    jd = prompt('Paste the job description here:', jd) ?? '';
+    return jd;
   }
   const mkHandleAuto = (id, skip) => async () => {
-    const jd = prompt('Paste the job description here:');
+    const jd = getJD();
     if (!jd) {
       return;
     }
@@ -270,7 +275,7 @@ window.addEventListener('load', async () => {
     recompile();
   };
   document.getElementById('auto').addEventListener('click', () => {
-    const jd = prompt('Paste the job description here:');
+    const jd = getJD();
     if (!jd) {
       return;
     }
