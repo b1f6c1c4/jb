@@ -6,6 +6,7 @@ const bwipjs = require('@bwip-js/node');
 const { LRUCache } = require('lru-cache');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const EventEmitter = require('node:events');
 const os = require('node:os');
 const util = require('node:util');
 const exec = util.promisify(require('node:child_process').exec);
@@ -22,6 +23,7 @@ const pdfCache = new LRUCache({
   },
 });
 const latexCache = {};
+const ev = new EventEmitter();
 
 async function cleanUp() {
   console.error('Cleaning');
@@ -135,6 +137,7 @@ function findProfile(req, res, next) {
     }
     await fs.writeFile(fp, req.body, 'utf8');
     res.sendStatus(204);
+    ev.emit(req.params.profile);
   });
 
   app.get('/profile/:profile', checkProfile, findProfile, (req, res) => {
@@ -333,6 +336,7 @@ ${req.profile[id + 'Description']}
       return lines;
     };
     const data = {
+      profile: req.params.profile,
       disp: (s) => s.replaceAll(/\t/g, '→').replaceAll(/\n/g, '↩'),
       sections: [{
         head: 'Default',
@@ -351,6 +355,24 @@ ${req.profile[id + 'Description']}
       }
     }
     res.render('code.ejs', data);
+  });
+
+  app.get('/profile/:profile/put', checkProfile, (req, res) => {
+    res.writeHead(200, {
+      'Connection': 'keep-alive',
+      'Cache-Control': 'no-store',
+      'Content-Type': 'text/event-stream',
+    });
+
+    function listener() {
+      res.write(`PUT\n\n`);
+      res.end();
+    }
+    ev.once(req.params.profile, listener);
+
+    res.on('close', () => {
+      ev.removeListener(req.params.profile, listener);
+    });
   });
 
   app.get('/profile/:profile/edit', checkProfile, findProfile, async (req, res) => {

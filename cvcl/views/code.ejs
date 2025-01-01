@@ -2,6 +2,15 @@
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="/code.css" />
+    <script defer>
+      (async function () {
+        const resp = await fetch('/profile/<%= profile %>/put');
+        if (resp.ok) {
+          await resp.text();
+          window.location.reload();
+        }
+      })();
+    </script>
   </head>
   <body>
     <% sections.forEach((s) => { %>
