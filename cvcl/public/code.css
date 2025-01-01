@@ -58,18 +58,20 @@ h1 {
   width: min-content;
   padding: 6mm;
   gap: 4px;
+  align-items: flex-end;
 }
 
 .row pre {
   margin: 0;
-  width: 0;
   overflow: visible;
 }
 
 canvas {
   width: min-content;
+  max-width: 128px;
 }
 
 canvas.pdf417 {
   margin: 3em;
+  max-width: 80vw;
 }

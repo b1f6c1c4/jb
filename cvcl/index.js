@@ -282,9 +282,9 @@ ${req.profile[id + 'Description']}
     const getCodes = (regex) => {
       const m = req.profile.rawPortfolio.match(regex);
       if (!m) return [];
-      return [...req.profile.rawPortfolio.substr(m.index)
-        .match(/^[\s\S]+?\n\n/m)[0]
-        .matchAll(/^%> (?<head>[^:]*): (?<text>.*)$/gm)]
+      const paragraph = req.profile.rawPortfolio.substr(m.index)
+        .match(/^[\s\S]+?\n\n/m)[0];
+      const lines = [...paragraph.matchAll(/^%> (?<head>[^:]*): (?<text>.*)$/gm)]
         .map(({ groups: { head, text } }) => {
           if (text.match(/^20[0-9][0-9][0-2][0-9][0-3][0-9]$/)) {
             return { head, format: (f) => moment(text).format(f) };
@@ -292,6 +292,11 @@ ${req.profile[id + 'Description']}
             return { head, text: text.replaceAll(/(?<!\\)\\n/g, '\n').replaceAll(/(?<!\\)\\t/g, '\t') };
           }
         });
+      const detail = paragraph.match(/(?<=\n\s+\\item\s+)(?:.|\n)*?(?=\\end|\n\s+\\item|$)/);
+      if (detail) {
+        lines.push({ head: 'detail', text: detail[0] });
+      }
+      return lines;
     };
     const data = {
       sections: [{
