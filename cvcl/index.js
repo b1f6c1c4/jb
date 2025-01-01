@@ -78,20 +78,20 @@ async function parsePortfolio(fn) {
 }
 
 function checkProfile(req, res, next) {
-  const p = req.get('X-Profile');
+  const p = req.params.profile;
   if (!p) {
-    res.status(400).send('X-Profile not set');
+    res.status(400).send(':profile not set');
     return;
   }
   if (!p.match(/^[^\/]+\.tex$/)) {
-    res.status(403).send('X-Profile illegal');
+    res.status(403).send(':profile illegal');
     return;
   }
   next();
 }
 
 function findProfile(req, res, next) {
-  parsePortfolio(req.get('X-Profile')).then((obj) => {
+  parsePortfolio(req.params.profile).then((obj) => {
     req.profile = obj;
     next();
   }).catch((err) => {
@@ -117,13 +117,13 @@ function findProfile(req, res, next) {
   app.use(express.static(path.join(__dirname, 'public')));
   app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
-  app.get('/profiles', async (req, res) => {
+  app.get('/profile', async (req, res) => {
     res.json((await fs.readdir(path.join(__dirname, 'data')))
       .filter((fn) => fn.endsWith('\.tex')));
   });
 
-  app.put('/profile', checkProfile, bodyParser.text(), async (req, res) => {
-    const fp = path.join(__dirname, 'data', req.get('X-Profile'));
+  app.put('/profile/:profile', checkProfile, bodyParser.text(), async (req, res) => {
+    const fp = path.join(__dirname, 'data', req.params.profile);
     try {
       await fs.rename(fp, fp + '.bak');
     } catch {
@@ -133,7 +133,7 @@ function findProfile(req, res, next) {
     res.sendStatus(204);
   });
 
-  app.get('/profile', checkProfile, findProfile, (req, res) => {
+  app.get('/profile/:profile', checkProfile, findProfile, (req, res) => {
     res.json({
       ...req.profile,
       file: undefined,
@@ -215,22 +215,22 @@ ${req.profile[id + 'Description']}
     res.json(recommendation);
   }
 
-  app.post('/projs', checkProfile, findProfile, bodyParser.text(), mkAuto('projs', 'PORTFOLIO',
+  app.post('/profile/:profile/projs', checkProfile, findProfile, bodyParser.text(), mkAuto('projs', 'PORTFOLIO',
     `You are a professional career advisor. You need to decide which projects from a portfolio are the best match given a job description to further strengthen a resume. Output a list of job identifiers (the short strings starting with \`\\p\`) only. Besure to put the most relevant project first.`));
 
-  app.post('/exps', checkProfile, findProfile, bodyParser.text(), mkAuto('exps', 'RESUME',
+  app.post('/profile/:profile/exps', checkProfile, findProfile, bodyParser.text(), mkAuto('exps', 'RESUME',
     `You are a professional career advisor. You need to decide which past job experiences from a list are the best match given a job description. Output a list of job experience identifiers (the short strings starting with \`\\e\`) only. You can either sort by in reverse chronological order or put the most relevant job experience first. If none of them fits perfectly, list a couple experiences that are remotely connected, most impressive, and/or up-to-date.`));
 
-  app.post('/edus', checkProfile, findProfile, bodyParser.text(), mkAuto('edus', 'RESUME',
+  app.post('/profile/:profile/edus', checkProfile, findProfile, bodyParser.text(), mkAuto('edus', 'RESUME',
     `You are a professional career advisor. You need to decide which educational degree from a list are the best match given a job description. Output a list of conferred degree identifiers (the short strings starting with \`\\ed\`) only. You must sort it in reverse chronological order.`));
 
-  app.post('/crss', checkProfile, findProfile, bodyParser.text(), mkAuto('crss', 'TRANSCRIPT',
+  app.post('/profile/:profile/crss', checkProfile, findProfile, bodyParser.text(), mkAuto('crss', 'TRANSCRIPT',
     `You are a professional career advisor. You need to decide which courses from a student's transcript are the best match given a job description. Output a list of course identifiers (the short strings starting with \`\\crs\`) only. A maximum of 16 courses is permitted. Put the most relevant job experience first.`));
 
-  app.post('/lics', checkProfile, findProfile, bodyParser.text(), mkAuto('lics', 'RESUME',
+  app.post('/profile/:profile/lics', checkProfile, findProfile, bodyParser.text(), mkAuto('lics', 'RESUME',
     `You are a professional career advisor. You need to decide which licenses and certificates from a resume are the best match given a job description. Output a list of license & certificate identifiers (the short strings starting with \`\\lc\`) only. Put the most relevant job experience first.`));
 
-  app.get('/pdf', checkProfile, findProfile, async (req, res) => {
+  app.get('/profile/:profile/pdf', checkProfile, findProfile, async (req, res) => {
     if (!req.query.latex) {
       res.sendStatus(400);
       return;
@@ -253,7 +253,6 @@ ${req.profile[id + 'Description']}
       ]);
       pdfCache.set(cacheKey, dir);
       res.set('Cache-Control', 'no-cache');
-      res.set('Vary', 'X-Profile');
       res.sendFile(path.join(dir, 'main.pdf'));
     } catch (err) {
       res.set('Content-Type', 'text/plain');
@@ -270,7 +269,7 @@ ${req.profile[id + 'Description']}
     }
   });
 
-  app.get('/edit', checkProfile, findProfile, async (req, res) => {
+  app.get('/profile/:profile/edit', checkProfile, findProfile, async (req, res) => {
     if (!req.query.latex) {
       res.sendStatus(400);
       return;

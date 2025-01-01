@@ -1,4 +1,4 @@
-const profileFetch = fetch('/profiles').then((res) => res.json());
+const profileFetch = fetch('/profile').then((res) => res.json());
 
 window.addEventListener('load', async () => {
   const loading = document.querySelector('#loading');
@@ -18,7 +18,7 @@ window.addEventListener('load', async () => {
     }
     profileSelect.appendChild(el);
   }
-  const profileData = await (await fetch('/profile', { headers: { 'X-Profile': profile } })).json();
+  const profileData = await (await fetch(`/profile/${profile}`)).json();
   if (!Array.isArray(profileData.sections))
     profileData.sections = [];
   profileData.sections.unshift(...Object.keys(profileData.knownSections));
@@ -77,23 +77,16 @@ window.addEventListener('load', async () => {
     }
     latex += '\\end{document}';
     iframe.contentWindow.postMessage({
-      url: '/pdf?' + new URLSearchParams({ latex }),
+      url: `/profile/${profile}/pdf?` + new URLSearchParams({ latex }),
       method: 'GET',
-      headers: {
-        'X-Profile': profile,
-      }, 
     });
   }
 
   async function editTarget(params) {
-    const resp = await fetch('/edit?' + new URLSearchParams({
+    const resp = await fetch(`/profile/${profile}/edit?` + new URLSearchParams({
       ...params,
       latex,
-    }), {
-      headers: {
-        'X-Profile': profile,
-      },
-    });
+    }));
     if (!resp.ok)
       return;
     const ln = +await resp.text();
@@ -229,12 +222,11 @@ window.addEventListener('load', async () => {
 
   const handleAuto = async (id, jd) => {
     loading.innerText = 'Analyzing...';
-    const resp = await fetch(`/${id}`, {
+    const resp = await fetch(`/profile/${profile}/${id}`, {
       method: 'POST',
       body: jd,
       headers: {
         'Content-Type': 'text/plain',
-        'X-Profile': profile,
       },
     });
     if (!resp.ok) {
@@ -319,12 +311,9 @@ window.addEventListener('load', async () => {
         return;
       }
     }
-    const resp = await fetch('/profile', {
+    const resp = await fetch(`/profile/${profile}`, {
       method: 'PUT',
       body,
-      headers: {
-        'X-Profile': profile,
-      },
     });
     if (!resp.ok) {
       alert(resp.status);
@@ -352,11 +341,7 @@ window.addEventListener('load', async () => {
     vimApi.defineEx('wq', 'wq', function () {
       saveEdit().then(stopEdit);
     });
-    const resp = await fetch('/profile', {
-      headers: {
-        'X-Profile': profile,
-      },
-    });
+    const resp = await fetch(`/profile/${profile}`);
     let txt;
     if (resp.ok)
       txt = (await resp.json()).rawPortfolio;
