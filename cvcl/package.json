@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@bwip-js/browser": "^4.5.1",
+    "@bwip-js/node": "^4.5.1",
     "@fontsource/inconsolata": "^5.1.0",
     "@google/generative-ai": "^0.21.0",
     "ace-builds": "^1.37.1",

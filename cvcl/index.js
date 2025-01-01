@@ -2,6 +2,7 @@ const https = require('node:https');
 const express = require('express');
 const moment = require('moment');
 const bodyParser = require('body-parser');
+const bwipjs = require('@bwip-js/node');
 const { LRUCache } = require('lru-cache');
 const fs = require('node:fs/promises');
 const path = require('node:path');
@@ -273,6 +274,39 @@ ${req.profile[id + 'Description']}
     }
   });
 
+  app.get('/code', async (req, res) => {
+    const text = req.query.t;
+    const options = {
+      bcid: 'datamatrix',
+      text,
+      scaleX: 3,
+      scaleY: 3,
+      includetext: false,
+      textalign: 'center',
+    };
+    const png = await bwipjs.toBuffer(options);
+    res.type('.png');
+    res.set('Cache-Control', 'public, max-age=999999999999, immutable');
+    res.send(png);
+  });
+
+  app.get('/pdf417', async (req, res) => {
+    const text = req.query.t;
+    const options = {
+      bcid: 'pdf417',
+      text,
+      scaleX: 3,
+      scaleY: 3,
+      includetext: false,
+      textalign: 'center',
+      columns: 6,
+    };
+    const png = await bwipjs.toBuffer(options);
+    res.type('.png');
+    res.set('Cache-Control', 'public, max-age=999999999999, immutable');
+    res.send(png);
+  });
+
   app.get('/profile/:profile/code', checkProfile, findProfile, async (req, res) => {
     const latex = req.query.latex ?? latexCache[req.params.profile];
     if (!latex) {
@@ -299,6 +333,7 @@ ${req.profile[id + 'Description']}
       return lines;
     };
     const data = {
+      disp: (s) => s.replaceAll(/\t/g, '→').replaceAll(/\n/g, '↩'),
       sections: [{
         head: 'Default',
         lines: getCodes(/^%>>+$/m),

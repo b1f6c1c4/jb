@@ -54,7 +54,7 @@ h1 {
 
 .row span {
   display: flex;
-  flex-flow: column-reverse nowrap;
+  flex-flow: column nowrap;
   width: min-content;
   padding: 6mm;
   gap: 4px;
@@ -66,12 +66,12 @@ h1 {
   overflow: visible;
 }
 
-canvas {
+img {
   width: min-content;
   max-width: 128px;
 }
 
-canvas.pdf417 {
+img.pdf417 {
   margin: 3em;
   max-width: 80vw;
 }

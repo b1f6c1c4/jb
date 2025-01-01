@@ -2,40 +2,6 @@
   <head>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="/code.css" />
-    <script src="/node_modules/@bwip-js/browser/dist/bwip-js.js" defer></script>
-    <script defer>
-      window.addEventListener('load', () => {
-        for (const canvas of document.querySelectorAll('canvas')) {
-          canvas.height = 1;
-          canvas.width = 1;
-          const text = canvas.getAttribute('x-text');
-          const shownText = text.replaceAll(/\t/g, '→').replaceAll(/\n/g, '↩');
-          const options = {
-            text,
-            scaleX: 3,
-            scaleY: 3,
-            includetext: false,
-            textalign: 'center',
-          };
-          if (text.length < 30) {
-            options.bcid = 'datamatrix';
-            const el = document.createElement('pre');
-            el.innerText = shownText;
-            canvas.parentElement.appendChild(el);
-          } else if (text.length < 100) {
-            options.bcid = 'datamatrix';
-            const el = document.createElement('pre');
-            el.innerText = shownText;
-            canvas.parentElement.appendChild(el);
-          } else {
-            options.bcid = 'pdf417';
-            canvas.classList.add('pdf417');
-            options.columns = 6;
-          }
-          bwipjs.toCanvas(canvas, options);
-        }
-      });
-    </script>
   </head>
   <body>
     <% sections.forEach((s) => { %>
@@ -47,26 +13,63 @@
         <% if (!l.format) { %>
         <div>
         <%   l.text.split('|').forEach((g) => { %>
-          <span><canvas x-text="<%= g %>"></canvas></span>
+        <%     if (g.length >= 100) { %>
+          <span><img class="pdf417" src="/pdf417?t=<%= g %>"></span>
+        <%     } else { %>
+          <span>
+            <pre><%= disp(g) %></pre>
+            <img src="/code?t=<%= g %>">
+          </span>
+        <%     } %>
         <%   }); %>
         </div>
         <% } else { %>
         <div class="date">
-          <span><canvas x-text="<%= l.format('MMDDYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MMM\tDD\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MMM\tD\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MM\tDD\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('M\tDD\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MMYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MMM\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MM\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('M\tYYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('YYYYMM') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('MM/YYYY') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('YYYY\tMMM') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('YYYY\tMM') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('YYYY\tM') %>"></canvas></span>
-          <span><canvas x-text="<%= l.format('YYYY/MM') %>"></canvas></span>
+          <span>
+            <pre><%= disp(l.format('MMDDYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MMDDYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MMM\tDD\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MMM\tDD\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MMM\tD\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MMM\tD\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MM\tDD\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MM\tDD\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('M\tDD\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('M\tDD\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MMYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MMYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MMM\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MMM\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MM\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MM\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('M\tYYYY')) %></pre>
+            <img src="/code?t=<%= l.format('M\tYYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('YYYYMM')) %></pre>
+            <img src="/code?t=<%= l.format('YYYYMM') %>"></span>
+          <span>
+            <pre><%= disp(l.format('MM/YYYY')) %></pre>
+            <img src="/code?t=<%= l.format('MM/YYYY') %>"></span>
+          <span>
+            <pre><%= disp(l.format('YYYY\tMMM')) %></pre>
+            <img src="/code?t=<%= l.format('YYYY\tMMM') %>"></span>
+          <span>
+            <pre><%= disp(l.format('YYYY\tMM')) %></pre>
+            <img src="/code?t=<%= l.format('YYYY\tMM') %>"></span>
+          <span>
+            <pre><%= disp(l.format('YYYY\tM')) %></pre>
+            <img src="/code?t=<%= l.format('YYYY\tM') %>"></span>
+          <span>
+            <pre><%= disp(l.format('YYYY/MM')) %></pre>
+            <img src="/code?t=<%= l.format('YYYY/MM') %>"></span>
         </div>
         <% } %>
       </div>
