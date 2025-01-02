@@ -1,5 +1,7 @@
+const path = require('node:path');
+const fs = require('node:fs/promises');
 const bodyParser = require('body-parser');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { checkProfile, findProfile } = require('./middleware');
 
 let model;

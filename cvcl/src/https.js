@@ -1,4 +1,6 @@
 const https = require('node:https');
+const path = require('node:path');
+const fs = require('node:fs/promises');
 
 module.exports = async function () {
   const [key, cert, ca, dhparam] = await Promise.all([

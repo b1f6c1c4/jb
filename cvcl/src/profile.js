@@ -1,9 +1,10 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
+const bodyParser = require('body-parser');
 const { profileDir, checkProfile, findProfile } = require('./middleware');
 
 module.exports = async function (app) {
-  await fs.mkdir(profileDir);
+  await fs.mkdir(profileDir, { recursive: true });
 
   app.get('/profile', async (req, res) => {
     res.json((await fs.readdir(profileDir))

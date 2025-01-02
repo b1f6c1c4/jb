@@ -1,6 +1,6 @@
 const path = require('node:path');
+const fs = require('node:fs/promises');
 const { profileCache } = require('./cache');
-const { checkProfile, findProfile } = require('./middleware');
 
 const profileDir = path.join(__dirname, '..', 'data');
 

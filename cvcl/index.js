@@ -9,7 +9,7 @@ const path = require('node:path');
   app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 
   const [https] = await Promise.all([
-    require('./src/https'),
+    require('./src/https')(),
     require('./src/ai')(app),
     require('./src/code')(app),
     require('./src/pdf')(app),

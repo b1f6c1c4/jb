@@ -2,7 +2,9 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const util = require('node:util');
-const { child_process } = require('node:child_process');
+const child_process = require('node:child_process');
+const bodyParser = require('body-parser');
+const { checkProfile, findProfile } = require('./middleware');
 const { latexCache, pdfCache, ev } = require('./cache');
 
 const exec = util.promisify(child_process.exec);
