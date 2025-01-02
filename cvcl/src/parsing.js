@@ -69,7 +69,7 @@ function parseKind(rawPortfolio, prefix, nm, single) {
 
     description += `---- BEGIN ${nm} \`${entry}\` ----
 ${latex}
----- END ${nm} \`${obj}\` ----
+---- END ${nm} \`${entry}\` ----
 `;
   }
 
@@ -85,7 +85,7 @@ class Profile {
   constructor(file, raw) {
     this.file = file;
     this.rawPortfolio = raw;
-    this.barcodes = getCodes(raw.matchAll(/^%>>+[\s\S]+?(?=\n\n)/gm)),
+    this.barcodes = getCodes([...raw.matchAll(/^%>>+[\s\S]+?(?=\n\n)/gm)].join('\n')),
 
     this.data = {
       edus: parseKind(raw, 'ed', 'CONFERRED DEGREE'),
@@ -98,16 +98,19 @@ class Profile {
     };
 
     this.knownSections = {};
-    for (const m of rawPortfolio.matchAll(/^% (?<id>[a-z]+)\s+=\s+(?<expr>.*)$/gm)) {
+    for (const m of raw.matchAll(/^% (?<id>[a-z]+)\s+=\s+(?<expr>.*)$/gm)) {
       this.knownSections[m.groups.expr] = m.groups.id;
     }
   }
 
   getEntries() {
-    const entries = {};
+    const entries = {
+      knownSections: this.knownSections,
+    };
     for (const id in this.data) {
       entries[id] = this.data[id].entries;
     }
+    return entries;
   }
 
   getCodes(latex) {
@@ -128,8 +131,8 @@ class Profile {
     let result = '';
     for (const ll of latex.split('\n')) {
       for (const id in this.data) {
-        if (ll in this.data[id].description)
-          result += this.data[id].description[ll] + '\n\n';
+        if (ll in this.data[id].descriptions)
+          result += this.data[id].descriptions[ll] + '\n\n';
       }
     }
     return result;

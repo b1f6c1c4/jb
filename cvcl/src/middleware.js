@@ -1,6 +1,6 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
-const parsing = require('./parsing');
+const Profile = require('./parsing');
 const { profileCache } = require('./cache');
 
 const profileDir = path.join(__dirname, '..', 'data');
@@ -13,7 +13,7 @@ async function parsePortfolio(fn) {
     return cacheResult.profile;
   }
   const rawPortfolio = await fs.readFile(fp, 'utf8');
-  const profile = parsing(file, rawPortfolio);
+  const profile = new Profile(fn, rawPortfolio);
   profileCache.set(fn, { mtime: st.mtimeNs, profile });
   return profile;
 }

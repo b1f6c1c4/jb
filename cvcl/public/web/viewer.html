@@ -35,6 +35,7 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
     <title>pdfmon + PDF.js viewer</title>
 
     <link rel="stylesheet" href="viewer.css">
+    <link rel="stylesheet" href="/viewer.css">
 
 <!-- This snippet is used in production (included from viewer.html) -->
 <link rel="resource" type="application/l10n" href="locale/locale.properties">
@@ -434,20 +435,10 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
     <div id="printContainer"></div>
 
     <input type="file" id="fileInput" class="hidden">
-    <div id="error-wrapper" style="
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        background-color: #777c;
-        z-index: 1000000;
-        color: white;
-        padding: 1em;
-        overflow: auto;
-        max-width: 70%;
-        max-height: 80%;
-    " onclick="const s = document.getElementById('error-overlay').style;
-    if (s.display) s.display = ''; else s.display = 'none';">
-        <pre id="error-overlay"></pre>
+    <div id="error-wrapper" onclick="
+      const s = document.getElementById('error-overlay').style;
+      if (s.display) s.display = ''; else s.display = 'none';">
+      <pre id="error-overlay"></pre>
     </div>
     <script>
       const sdtb = document.getElementById('sidebarToggle');
@@ -459,23 +450,23 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
       };
       PDFViewerApplication.pdfSidebar?.close();
       window.addEventListener('message', async (event) => {
+        const style = (c) => {
+          document.getElementById('error-wrapper').setAttribute('class', c);
+          if (c)
+            document.getElementById('error-overlay').style.display = '';
+        };
+        const pre = document.getElementById('error-overlay');
         if (typeof event.data === 'string') {
-          style.color = '#3e3';
-          style.backgroundColor = '#666c';
+          style('advice');
           pre.innerText = event.data;
           return;
         }
+        style();
         window.top.postMessage('Compiling...');
         const resp = await fetch(event.data.url, event.data);
         window.top.postMessage('Downloading...');
-        const style = document.getElementById('error-wrapper').style;
-        const pre = document.getElementById('error-overlay');
-        style.visibility = 'visible';
-        style.color = '#e3e';
-        style.backgroundColor = '#000c';
         if (resp.ok) {
           pre.innerText = '';
-          style.visibility = 'visible';
           const buf = await resp.arrayBuffer();
           window.top.postMessage('Parsing...');
           pdfjsLib.getDocument(buf).promise.then(doc => {
@@ -502,13 +493,11 @@ Modification by b1f6c1c4 <b1f6c1c4@gmail.com>:
             });
           });
         } else if (resp.status === 422) {
-          style.color = '#ee3';
-          style.backgroundColor = '#666c';
+          style('warning');
           window.top.postMessage('Errored!');
           pre.innerText = await resp.text();
         } else {
-          style.color = '#e33';
-          style.backgroundColor = '#000c';
+          style('error');
           window.top.postMessage('Errored!');
           pre.innerText = await resp.text();
         }

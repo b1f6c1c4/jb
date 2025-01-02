@@ -18,7 +18,7 @@ ${req.body}
 #### END JOB DESCRIPTION ####
 
 #### BEGIN ${section} ####
-${req.profile[id].description}
+${req.profile.data[id].description}
 #### END ${section} ####
 
 #### BEGIN OUTPUT ####
@@ -27,7 +27,7 @@ ${req.profile[id].description}
   const recommendation = [];
   for (const rr of txt.trim().split('\n')) {
     const r = rr.trim().replace(/^`|`$/g, '');
-    if (req.profile[id].entries.includes(r))
+    if (req.profile.data[id].entries.includes(r))
       recommendation.push(r);
   }
   if (!recommendation.length) {
@@ -53,9 +53,9 @@ module.exports = async function (app) {
 ${req.body}
 #### END JOB DESCRIPTION ####
 
-#### BEGIN ${section} ####
+#### BEGIN RESUME ####
 ${req.profile.getDescription(req.query.latex)}
-#### END ${section} ####
+#### END RESUME ####
 
 #### BEGIN OUTPUT ####
 `;

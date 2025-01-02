@@ -1,4 +1,4 @@
-const profileFetch = fetch('/profile').then((res) => res.json());
+const profileFetch = fetch('/profile/').then((res) => res.json());
 
 window.addEventListener('load', async () => {
   const loading = document.querySelector('#loading');
@@ -18,7 +18,7 @@ window.addEventListener('load', async () => {
     }
     profileSelect.appendChild(el);
   }
-  const profileData = await (await fetch(`/profile/${profile}`)).json();
+  const profileData = await (await fetch(`/profile/${profile}/entries`)).json();
   if (!Array.isArray(profileData.sections))
     profileData.sections = [];
   profileData.sections.unshift(...Object.keys(profileData.knownSections));
@@ -288,15 +288,27 @@ window.addEventListener('load', async () => {
     recompile();
     const resp = await fetch(`/profile/${profile}/advice?` + new URLSearchParams({
       latex,
-    }, {
+    }), {
       method: 'POST',
       headers: {
         'Content-Type': 'text/plain',
       },
       body: jd,
-    }));
+    });
     if (!resp.ok) return;
-    iframe.currentWindow.postMessage(await resp.text());
+    const jb = await resp.text();
+    (function trial() {
+      if (iframe.contentWindow) {
+        console.log('wait');
+        setTimeout(() => {
+          console.log('gooo');
+          iframe.contentWindow.postMessage(jb);
+        }, 1000);
+      } else {
+        console.log('nope');
+        setTimeout(trial, 100);
+      }
+    })();
   });
   document.getElementById('auto_edus').addEventListener('click', mkHandleAuto('edus'));
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
@@ -330,7 +342,7 @@ window.addEventListener('load', async () => {
         return;
       }
     }
-    const resp = await fetch(`/profile/${profile}`, {
+    const resp = await fetch(`/profile/${profile}/`, {
       method: 'PUT',
       body,
     });
@@ -360,10 +372,10 @@ window.addEventListener('load', async () => {
     vimApi.defineEx('wq', 'wq', function () {
       saveEdit().then(stopEdit);
     });
-    const resp = await fetch(`/profile/${profile}`);
+    const resp = await fetch(`/profile/${profile}/`);
     let txt;
     if (resp.ok)
-      txt = (await resp.json()).rawPortfolio;
+      txt = await resp.text();
     else if (resp.status === 404)
       txt = `\\documentclass{article}
 
@@ -379,6 +391,11 @@ window.addEventListener('load', async () => {
 
 % Note: If default sections are environments, \\end will be added automatically.
 %       However, extra sections must not be environments.
+
+%>>>>>>>>>>>
+% Insert barcodes here:
+%> head: text|text|text
+%>>>>>>>>>>>
 
 % Keep this:
 \\begin{document}
