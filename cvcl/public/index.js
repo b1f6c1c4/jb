@@ -50,11 +50,14 @@ window.addEventListener('load', async () => {
   });
 
   document.querySelector('#refresh').addEventListener('click', recompile);
-  document.querySelector('#code').addEventListener('click', () => recompile(true));
+  document.querySelector('#code').addEventListener('click', () => {
+    recompile(true);
+    window.open(`/profile/${profile}/code?` + new URLSearchParams({ latex }), '_blank');
+  });
   const iframe = document.querySelector('iframe');
 
   let latex;
-  function recompile(barcode) {
+  function recompile(noshow) {
     loading.innerText = 'Preprocessing...';
     const find = (id) => {
       const res = [...document.querySelectorAll(
@@ -77,8 +80,7 @@ window.addEventListener('load', async () => {
       latex += '\n';
     }
     latex += '\\end{document}';
-    if (barcode === true) {
-      window.open(`/profile/${profile}/code?` + new URLSearchParams({ latex }), '_blank');
+    if (noshow === true) {
       return;
     }
     iframe.contentWindow.postMessage({
@@ -271,18 +273,30 @@ window.addEventListener('load', async () => {
     await handleAuto(id, jd);
     recompile();
   };
-  document.getElementById('auto').addEventListener('click', () => {
+  document.getElementById('auto').addEventListener('click', async () => {
     const jd = getJD();
     if (!jd) {
       return;
     }
-    Promise.all([
+    await Promise.all([
       handleAuto('edus', jd),
       handleAuto('exps', jd),
       handleAuto('projs', jd),
       handleAuto('crss', jd),
       handleAuto('lics', jd),
-    ]).then(recompile);
+    ]);
+    recompile();
+    const resp = await fetch(`/profile/${profile}/advice?` + new URLSearchParams({
+      latex,
+    }, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: jd,
+    }));
+    if (!resp.ok) return;
+    iframe.currentWindow.postMessage(await resp.text());
   });
   document.getElementById('auto_edus').addEventListener('click', mkHandleAuto('edus'));
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
