@@ -1,0 +1,36 @@
+#error-wrapper {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  background-color: #777c;
+  z-index: 1000000;
+  color: white;
+  padding: 1em;
+  overflow: auto;
+  max-width: 70%;
+  max-height: 80%;
+  visibility: none;
+}
+
+#error-wrapper.advice {
+  visibility: visible;
+  color: lightgreen;
+  background-color: #000000d5;
+}
+
+#error-wrapper.advice pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#error-wrapper.warning {
+  visibility: visible;
+  color: #ee3;
+  background-color: #666c;
+}
+
+#error-wrapper.error {
+  visibility: visible;
+  color: #e33;
+  background-color: #000c;
+}

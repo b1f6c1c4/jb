@@ -124,7 +124,7 @@ window.addEventListener('load', async () => {
     let last = lastS ? JSON.parse(lastS) : [];
     if (id === 'sections' && !last.length)
       last = Object.keys(profileData.knownSections);
-    if (!profileData[id]) {
+    if (!profileData[id].length) {
       section.style.display = 'none';
       continue;
     }

@@ -12,6 +12,10 @@ function getCodes(latex) {
       } else {
         const line = { head, texts: [] };
         text.split('|').forEach((t) => {
+          if (head === 'COMBO') {
+            line.texts.push(` \x09\x07${t}\x0a`);
+            return;
+          }
           let seq = t
             .replaceAll(/(?<!\\)\\n/g, '\n')
             .replaceAll(/(?<!\\)\\r/g, '\r')
@@ -65,16 +69,16 @@ function parseKind(rawPortfolio, prefix, nm, single) {
     const i = rawPortfolio.indexOf(entry) + entry.length;
     let latex;
     if (!single) {
-      latex = rawPortfolio.substr(i).match(/^[\s\S]+?\n\n/m)[0]
+      latex = rawPortfolio.substr(i).match(/^[\s\S]+?\n\n/m)[0];
     } else {
-      latex += rawPortfolio.substr(i).match(/^.*$/m)[0]
+      latex = rawPortfolio.substr(i).match(/^.*$/m)[0];
     }
     latex = latex
       .replace(/\\par\b/g, '')
       .replace(/\\g?hhref\{[^}]*\}/, '').trim();
 
     descriptions[entry] = latex;
-    barcodes[entry] = single ? undefined : getCodes(latex);
+    barcodes[entry] = getCodes(latex);
 
     description += `---- BEGIN ${nm} \`${entry}\` ----
 ${latex}
@@ -102,8 +106,8 @@ class Profile {
       projs: parseKind(raw, 'p', 'PROJECT'),
       exps: parseKind(raw, 'e', 'JOB EXPERIENCE'),
       crss: parseKind(raw, 'crs', 'COURSE', true),
-      skills: parseKind(raw, 's', 'SKILL LIST', true),
-      sections: parseKind(raw, 'section', 'MISC DATA', true),
+      skills: parseKind(raw, 's', 'SKILL LIST'),
+      sections: parseKind(raw, 'section', 'MISC DATA'),
     };
 
     this.knownSections = {};
@@ -126,11 +130,13 @@ class Profile {
     const result = [{ head: 'Default', lines: this.barcodes}];
     for (const ll of latex.split('\n')) {
       for (const id in this.data) {
-        if (ll in this.data[id].barcodes)
-          result.push({
-            head: ll,
-            lines: this.data[id].barcodes[ll],
-          });
+        const lines = this.data[id].barcodes[ll];
+        if (!lines || !lines.length)
+          continue;
+        result.push({
+          head: ll,
+          lines,
+        });
       }
     }
     return result;
