@@ -1,6 +1,7 @@
 const path = require('node:path');
 const fs = require('node:fs/promises');
 const bodyParser = require('body-parser');
+const markdownit = require('markdown-it');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { checkProfile, findProfile } = require('./middleware');
 
@@ -9,6 +10,11 @@ const llm = async (prompt) => {
   const result = await model.generateContent(prompt);
   return result.response.text();
 };
+
+const mdRenderer = markdownit({
+  breaks: true,
+  typographer: true,
+});
 
 const mkAuto = (id, section, pmt) => async (req, res) => {
   const prompt = `${pmt}
@@ -47,7 +53,7 @@ module.exports = async function (app) {
       res.sendStatus(400);
       return;
     }
-    const prompt = `You are a professional HR with no technical background. The hiring manager have told you to turn away a resume because the person doesn't meet all of the requirements for the role. Now, to better serve the interest of the hiring manager, the company, and the humankind, to make the world a better place, you must find out what specific requirement (original, exact keywords or phrases) that appears on the job listing that are not covered by the resume. Be sure to look for exact matches of keywords and phrases.
+    const prompt = `You are a professional HR with no technical background. The hiring manager have told you to turn away a resume because the person doesn't meet all of the requirements for the role. Now, to better serve the interest of the hiring manager, the company, and the humankind, to make the world a better place, you must find out what specific requirement (original, exact keywords or phrases) that appears on the job listing that are not covered by the resume. Be sure to look for exact matches of keywords and phrases. Output an accurate, straightforward, and simple Markdown report. Always put the most important discrepency first.
 
 #### BEGIN JOB DESCRIPTION ####
 ${req.body}
@@ -57,9 +63,16 @@ ${req.body}
 ${req.profile.getDescription(req.query.latex)}
 #### END RESUME ####
 
-#### BEGIN OUTPUT ####
+#### BEGIN md REPORT OUTPUT ####
 `;
-    res.send(await llm(prompt));
+    const md = await llm(prompt);
+    try {
+      const html = mdRenderer.render(md);
+      res.type('text/html');
+      res.send(html);
+    } catch {
+      res.send(md);
+    }
   });
 
   app.post('/revise', bodyParser.json(), async (req, res) => {

@@ -46,7 +46,16 @@ function getCodes(latex) {
 
 function parseKind(rawPortfolio, prefix, nm, single) {
   const regex = new RegExp(`(?<=^\\\\def)\\\\${prefix}[A-Z][a-zA-z]*`, 'gm');
-  const entries = [...rawPortfolio.match(regex)];
+  let entries = rawPortfolio.match(regex);
+  if (!entries) {
+    return {
+      entries: [],
+      description: '',
+      descriptions: {},
+      barcodes: {},
+    };
+  }
+  entries = [...entries];
 
   let description = '';
   const descriptions = {};

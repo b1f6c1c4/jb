@@ -273,6 +273,34 @@ window.addEventListener('load', async () => {
     await handleAuto(id, jd);
     recompile();
   };
+  async function seekAdvice(jd) {
+    const resp = await fetch(`/profile/${profile}/advice?` + new URLSearchParams({
+      latex,
+    }), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: jd,
+    });
+    if (!resp.ok) return;
+    const text = await resp.text();
+    (function trial() {
+      if (iframe.contentWindow) {
+        console.log('wait');
+        setTimeout(() => {
+          console.log('gooo');
+          iframe.contentWindow.postMessage({
+            mime: resp.headers.get('content-type'),
+            text,
+          });
+        }, 100);
+      } else {
+        console.log('nope');
+        setTimeout(trial, 100);
+      }
+    })();
+  }
   document.getElementById('auto').addEventListener('click', async () => {
     const jd = getJD();
     if (!jd) {
@@ -286,29 +314,14 @@ window.addEventListener('load', async () => {
       handleAuto('lics', jd),
     ]);
     recompile();
-    const resp = await fetch(`/profile/${profile}/advice?` + new URLSearchParams({
-      latex,
-    }), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-      body: jd,
-    });
-    if (!resp.ok) return;
-    const jb = await resp.text();
-    (function trial() {
-      if (iframe.contentWindow) {
-        console.log('wait');
-        setTimeout(() => {
-          console.log('gooo');
-          iframe.contentWindow.postMessage(jb);
-        }, 1000);
-      } else {
-        console.log('nope');
-        setTimeout(trial, 100);
-      }
-    })();
+    seekAdvice(jd);
+  });
+  document.getElementById('advice').addEventListener('click', () => {
+    const jd = getJD();
+    if (!jd) {
+      return;
+    }
+    seekAdvice(jd);
   });
   document.getElementById('auto_edus').addEventListener('click', mkHandleAuto('edus'));
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
