@@ -24,11 +24,7 @@ module.exports = async function (app) {
   });
 
   app.get('/profile/:profile', checkProfile, findProfile, (req, res) => {
-    res.json({
-      ...req.profile,
-      file: undefined,
-      projsDescription: undefined,
-    });
+    res.json(req.profile.getEntries());
   });
 
   app.get('/profile/:profile/edit', checkProfile, findProfile, async (req, res) => {

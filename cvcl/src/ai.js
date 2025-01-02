@@ -5,6 +5,10 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { checkProfile, findProfile } = require('./middleware');
 
 let model;
+const llm = async (prompt) => {
+  const result = await model.generateContent(prompt);
+  return result.response.text();
+};
 
 const mkAuto = (id, section, pmt) => async (req, res) => {
   const prompt = `${pmt}
@@ -14,17 +18,16 @@ ${req.body}
 #### END JOB DESCRIPTION ####
 
 #### BEGIN ${section} ####
-${req.profile[id + 'Description']}
+${req.profile[id].description}
 #### END ${section} ####
 
 #### BEGIN OUTPUT ####
 `;
-  const result = await model.generateContent(prompt);
-  const txt = result.response.text();
+  const txt = await llm(prompt);
   const recommendation = [];
   for (const rr of txt.trim().split('\n')) {
     const r = rr.trim().replace(/^`|`$/g, '');
-    if (req.profile[id].includes(r))
+    if (req.profile[id].entries.includes(r))
       recommendation.push(r);
   }
   if (!recommendation.length) {
@@ -38,6 +41,26 @@ module.exports = async function (app) {
   const apiKey = await fs.readFile(path.join(__dirname, '..', '.env'), 'utf8');
   const genAI = new GoogleGenerativeAI(apiKey)
   model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  app.post('/profile/:profile/advice', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
+    if (!req.query.latex) {
+      res.sendStatus(400);
+      return;
+    }
+    const prompt = `You are a professional HR with no technical background. The hiring manager have told you to turn away a resume because the person doesn't meet all of the requirements for the role. Now, to better serve the interest of the hiring manager, the company, and the humankind, to make the world a better place, you must find out what specific requirement (original, exact keywords or phrases) that appears on the job listing that are not covered by the resume. Be sure to look for exact matches of keywords and phrases.
+
+#### BEGIN JOB DESCRIPTION ####
+${req.body}
+#### END JOB DESCRIPTION ####
+
+#### BEGIN ${section} ####
+${req.profile.getDescription(req.query.latex)}
+#### END ${section} ####
+
+#### BEGIN OUTPUT ####
+`;
+    res.send(await llm(prompt));
+  });
 
   app.post('/revise', bodyParser.json(), async (req, res) => {
     if (!req.body) {
@@ -54,8 +77,7 @@ ${req.body.doc.trim()}
 Revised resume paragraph:
 \`\`\`latex
 `;
-    const result = await model.generateContent(prompt);
-    const txt = result.response.text().replace(/^``{2}(?:latex)?$/gm, '').trim();
+    const txt = (await llm(prompt)).replace(/^``{2}(?:latex)?$/gm, '').trim();
     if (req.body.doc.indexOf('\n') === -1) {
       res.send(txt);
       return;
