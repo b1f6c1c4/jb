@@ -463,4 +463,23 @@ window.addEventListener('load', async () => {
       document.removeEventListener('mousemove', setSplit);
     }, { once: true });
   });
+
+  const profileJudgements = await (await fetch(`/profile/${profile}/judgements`)).json();
+  for (const kind in profileJudgements) {
+    for (const el of document.querySelectorAll(`section#${kind} li`)) {
+      const judgement = profileJudgements[kind][el.innerText];
+      if (!judgement) continue;
+      const min = Math.min(...Object.values(judgement));
+      const str = JSON.stringify(judgement);
+      el.setAttribute('title', str);
+      el.classList.add(`judgement-${min}`);
+      if (min >= 5) continue;
+      let worst = '';
+      for (const x in judgement)
+        if (judgement[x] === min)
+          worst += x;
+      el.setAttribute('x-judgement-worst', worst);
+      el.style.setProperty('--judgement-len', worst.length);
+    }
+  }
 });

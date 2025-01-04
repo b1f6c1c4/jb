@@ -5,6 +5,7 @@ const markdownit = require('markdown-it');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { OpenAI } = require('openai');
 const { checkProfile, findProfile } = require('./middleware');
+const { mkJudgeCache } = require('./cache');
 
 let model, model2;
 const llm = async (prompt) => {
@@ -51,6 +52,62 @@ ${req.profile.data[id].description}
   res.json(recommendation);
 }
 
+const judgePrompt = `Write a resume quality evaluation report on a specific resume subsection by six evaluation metrics.
+
+Each field is ranked 1-5, and no explanation is necessary.
+
+"E": English fluency (5 = fluent, excellent English writing with a diverse vocabulary; 3 = basic English with limited vocabulary; 1 = many typos)
+"Q": Quantifiable metrics (5 = at least three quantified, measurable metrics provided; 3 = at least one metric; 1 = not provided at all)
+"A": Action words (5 = all bullet points start with a strong, past-tense action verb; 1 = not using action verbs)
+"W": Work impact (5 = discuss the meaningfulness and merits of their actions, going beyond what is actually done; 1 = plain summary of work)
+"L": Length (5 = one sentence per bullet point, at least two bullet points in total; 1 = too many sentences or too little bullet points)
+"O": Ordering (5 = the most impressive bullet point appears first; 1 = the first one is common and unattractive)
+"I": Impressive (5 = overall it is a well-written, impressive subsection; 1 = plain, unattractive language or full of cliche)
+
+### Example Resume quality evaluation report in JSON
+
+\`\`\`json
+{
+  "E": 4,
+  "Q": 2,
+  "A": 1,
+  "W": 3,
+  "L": 5,
+  "O": 2,
+  "I": 4
+}
+\`\`\`
+`;
+const judgeCache = mkJudgeCache(judgePrompt);
+
+async function judge(desc) {
+  let res = await judgeCache.get(desc);
+  if (res) {
+    return res;
+  }
+  const prompt = `${judgePrompt}
+
+#### BEGIN RESUME SUBSECTION
+${desc}
+#### END RESUME SUBSECTION
+
+#### Resume quality evaluation report in JSON
+
+\`\`\`json
+`;
+  let txt = await llm2(prompt);
+  txt = txt.trim();
+  txt = txt.replaceAll(/^#+.*$/gm, '').replaceAll(/^``+.*$/gm, '');
+  try {
+    res = JSON.parse(txt);
+    await judgeCache.set(desc, res);
+    return res;
+  } catch (err) {
+    console.log(txt);
+    throw err;
+  }
+}
+
 module.exports = async function (app) {
   const [apiKey, apiKey2] = await Promise.all([
     fs.readFile(path.join(__dirname, '..', '.env'), 'utf8'),
@@ -61,6 +118,17 @@ module.exports = async function (app) {
   model2 = new OpenAI({
     apiKey: apiKey2.trim(),
     baseURL: 'https://api.groq.com/openai/v1',
+  });
+
+  app.get('/profile/:profile/judgements', checkProfile, findProfile, async (req, res) => {
+    const answer = {};
+    for (const id of ['exps', 'projs']) {
+      answer[id] = {};
+      await Promise.all(req.profile.data[id].entries.map(async (entry) => {
+        answer[id][entry] = await judge(req.profile.data[id].descriptions[entry]);
+      }));
+    }
+    res.json(answer);
   });
 
   app.post('/profile/:profile/advice', checkProfile, findProfile, bodyParser.text(), async (req, res) => {

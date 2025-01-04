@@ -149,13 +149,14 @@ li {
   padding: 1px;
   display: block;
   border: solid 1px gray;
+  border-right-width: calc(0.5em * var(--judgement-len) + 0.7em);
   border-radius: 3px;
-  overflow-x: scroll;
   cursor: grab;
   -ms-overflow-style: none;
   scrollbar-width: none;
   white-space: nowrap;
   user-select: none;
+  position: relative;
 }
 
 .sortable-selected {
@@ -269,4 +270,40 @@ nav select {
   background-color: #7f7f7f;
   opacity: 1;
   mix-blend-mode: difference;
+}
+
+li.judgement-5 {
+  border-color: #37640c;
+  border-right-width: calc(0.5em + 0.7em);
+}
+
+li.judgement-5::after {
+  content: '✔';
+  right: calc(-0.5em - 0.35em - 2px);
+  top: -2px;
+}
+
+li.judgement-4 {
+  border-color: #84c076;
+}
+
+li.judgement-3 {
+  border-color: #b4ba8a;
+}
+
+li.judgement-2 {
+  border-color: #ff9b33;
+}
+
+li.judgement-1 {
+  border-color: #eb2727;
+}
+
+li::after {
+  content: attr(x-judgement-worst);
+  display: block;
+  position: absolute;
+  right: calc(-0.5em * var(--judgement-len) - 0.35em);
+  top: 0;
+  color: white;
 }
