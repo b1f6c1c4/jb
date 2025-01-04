@@ -10,6 +10,7 @@
     "lru-cache": "^11.0.2",
     "markdown-it": "^14.1.0",
     "moment": "^2.30.1",
+    "openai": "^4.77.3",
     "sortablejs": "^1.15.6"
   }
 }

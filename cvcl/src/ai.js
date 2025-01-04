@@ -3,12 +3,20 @@ const fs = require('node:fs/promises');
 const bodyParser = require('body-parser');
 const markdownit = require('markdown-it');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { OpenAI } = require('openai');
 const { checkProfile, findProfile } = require('./middleware');
 
-let model;
+let model, model2;
 const llm = async (prompt) => {
   const result = await model.generateContent(prompt);
   return result.response.text();
+};
+const llm2 = async (prompt) => {
+  const chatCompletion = await model2.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama-3.3-70b-versatile',
+  });
+  return chatCompletion.choices[0].message.content;
 };
 
 const mdRenderer = markdownit({
@@ -44,9 +52,16 @@ ${req.profile.data[id].description}
 }
 
 module.exports = async function (app) {
-  const apiKey = await fs.readFile(path.join(__dirname, '..', '.env'), 'utf8');
+  const [apiKey, apiKey2] = await Promise.all([
+    fs.readFile(path.join(__dirname, '..', '.env'), 'utf8'),
+    fs.readFile(path.join(__dirname, '..', '.env.groq'), 'utf8'),
+  ]);
   const genAI = new GoogleGenerativeAI(apiKey)
   model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  model2 = new OpenAI({
+    apiKey: apiKey2.trim(),
+    baseURL: 'https://api.groq.com/openai/v1',
+  });
 
   app.post('/profile/:profile/advice', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
     if (!req.query.latex) {
@@ -65,7 +80,7 @@ ${req.profile.getDescription(req.query.latex)}
 
 #### BEGIN md REPORT OUTPUT ####
 `;
-    const md = await llm(prompt);
+    const md = await llm2(prompt);
     try {
       const html = mdRenderer.render(md);
       res.type('text/html');
@@ -90,7 +105,7 @@ ${req.body.doc.trim()}
 Revised resume paragraph:
 \`\`\`latex
 `;
-    const txt = (await llm(prompt)).replace(/^``{2}(?:latex)?$/gm, '').trim();
+    const txt = (await llm2(prompt)).replace(/^``{2}(?:latex)?$/gm, '').trim();
     if (req.body.doc.indexOf('\n') === -1) {
       res.send(txt);
       return;
