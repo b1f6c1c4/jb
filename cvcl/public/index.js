@@ -151,13 +151,11 @@ window.addEventListener('load', async () => {
       for (const el of active.querySelectorAll('li') ?? [])
         active.removeChild(el);
       for (const el of avail.querySelectorAll('li') ?? []) {
-        if (el.innerText.startsWith('\\vspace')) {
-          el.classList.remove('selected');
-        } else {
-          el.classList.add('selected');
-          const e = document.createElement('li');
-          e.innerText = el.innerText;
+        el.classList.remove('selected');
+        if (!el.innerText.startsWith('\\vspace')) {
+          const e = el.cloneNode(true);
           active.appendChild(e);
+          el.classList.add('selected');
         }
       }
     }
@@ -242,17 +240,15 @@ window.addEventListener('load', async () => {
     }
     loading.innerText = 'Downloading...';
     const answer = await resp.json();
-    for (const el of document.querySelectorAll(`section#${id} > ul:nth-child(2) > li`)) {
-      el.classList.remove('selected');
-      if (answer.includes(el.innerText))
-        el.classList.add('selected');
-    }
     const active = document.querySelector(`section#${id} > div > ul:first-child`);
     active.innerHTML = '';
-    for (const obj of answer) {
-      const el = document.createElement('li');
-      el.innerText = obj;
-      active.appendChild(el);
+    for (const el of document.querySelectorAll(`section#${id} > ul:nth-child(2) > li`)) {
+      el.classList.remove('selected');
+      if (answer.includes(el.innerText)) {
+        const e = el.cloneNode(true);
+        active.appendChild(e);
+        el.classList.add('selected');
+      }
     }
     if (!answer.length) {
       loading.innerText = 'No recommendation';
@@ -384,6 +380,15 @@ window.addEventListener('load', async () => {
     vimApi.defineEx('quit', 'q', stopEdit);
     vimApi.defineEx('wq', 'wq', function () {
       saveEdit().then(stopEdit);
+    });
+    vimApi.defineEx('hardcopy', 'ha', function () {
+      const element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(editor.getValue()));
+      element.setAttribute('download', profile);
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
     });
     const resp = await fetch(`/profile/${profile}/`);
     let txt;
