@@ -68,17 +68,63 @@ module.exports = async function (app) {
       res.sendStatus(400);
       return;
     }
-    const prompt = `You are a professional HR with no technical background. The hiring manager have told you to turn away a resume because the person doesn't meet all of the requirements for the role. Now, to better serve the interest of the hiring manager, the company, and the humankind, to make the world a better place, you must find out what specific requirement (original, exact keywords or phrases) that appears on the job listing that are not covered by the resume. Be sure to look for exact matches of keywords and phrases. Output an accurate, straightforward, and simple Markdown report. Always put the most important discrepency first.
+    const prompt = `
+You are a professional HR specialist tasked with analyzing a candidate’s resume against a job listing. The hiring manager believes the resume does not fully match the job requirements. Your objective is to determine:
 
-#### BEGIN JOB DESCRIPTION ####
+1. **Exact Keyword Gaps**: Identify specific requirements (keywords or phrases) from the job listing that are absent in the resume.
+2. **Potential Keyword Mismatches**: Highlight possible mismatches where the candidate may have used alternative or synonymous terms instead of the exact keywords from the job listing.
+
+### Instructions:
+
+1. Focus on exact keywords or phrases from the job listing that are not present in the resume.
+2. Identify alternative or synonymous terms in the resume that could match job requirements but are not an exact match.
+3. Clearly separate exact gaps from potential mismatches in your output.
+4. Prioritize the most critical discrepancies.
+5. Format the output as a detailed Markdown report for clarity and easy reference.
+
+### Example Markdown Output Format:
+
+\`\`\`markdown
+# Resume Evaluation Report
+
+## Missing Requirements (Exact Matches)
+
+1. **Requirement Name/Keyword**: [Job Listing Requirement]
+   - **Job Listing Context**: [Context of the requirement in the job listing]
+   - **Observation**: No matching term found in the resume.
+
+2. **Requirement Name/Keyword**: [Another Missing Requirement]
+   - **Job Listing Context**: [Context]
+   - **Observation**: Not present.
+
+## Possible Keyword Mismatches (Alternative Terms)
+
+1. **Requirement Name/Keyword**: [Job Listing Requirement]
+   - **Job Listing Context**: [Context of the requirement in the job listing]
+   - **Resume Term**: [Alternative/Synonym used in the resume]
+   - **Evaluation**: [Assessment of how closely the term matches the intent of the job requirement].
+
+2. **Requirement Name/Keyword**: [Another Keyword Mismatch]
+   - **Job Listing Context**: [Context]
+   - **Resume Term**: [Alternative term found in the resume]
+   - **Evaluation**: [Assessment].
+
+## Summary
+
+- **Total Requirements Evaluated**: [X].
+- **Missing Exact Matches**: [Number].
+- **Potential Mismatches**: [Number].
+- Recommendations:
+  - Consider clarifying [specific key requirements] with the candidate.
+  - Review alternative terms to confirm if they align with the role's expectations.
+\`\`\`
+
+#### Job Listing Post Content:
 ${req.body}
-#### END JOB DESCRIPTION ####
 
-#### BEGIN RESUME ####
+#### User Resume Content:
 ${req.profile.getDescription(req.query.latex)}
-#### END RESUME ####
 
-#### BEGIN md REPORT OUTPUT ####
 `;
     const md = await llm2(prompt);
     try {
