@@ -319,6 +319,18 @@ window.addEventListener('load', async () => {
     }
     seekAdvice(jd);
   });
+  document.getElementById('copy').addEventListener('click', async () => {
+    const resp = await fetch(`/profile/${profile}/full?` + new URLSearchParams({
+      latex,
+    }));
+    if (!resp.ok) return;
+    const text = await resp.text();
+    window.navigator.clipboard.writeText(text);
+    loading.innerText = 'Copied!';
+    setTimeout(() => {
+      loading.innerText = '';
+    }, 300);
+  });
   document.getElementById('auto_edus').addEventListener('click', mkHandleAuto('edus'));
   document.getElementById('auto_exps').addEventListener('click', mkHandleAuto('exps'));
   document.getElementById('auto_projs').addEventListener('click', mkHandleAuto('projs'));

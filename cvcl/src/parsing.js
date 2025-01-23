@@ -78,7 +78,7 @@ function parseKind(rawPortfolio, prefix, nm, single) {
       .replace(/\\par\b/g, '')
       .replace(/\\g?hhref\{[^}]*\}/, '').trim();
 
-    descriptions[entry] = latex;
+    descriptions[entry] = latex.replace(/^%> .*$\s?/gm, '');
     barcodes[entry] = getCodes(latex);
 
     description += `---- BEGIN ${nm} \`${entry}\` ----

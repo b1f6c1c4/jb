@@ -131,6 +131,14 @@ module.exports = async function (app) {
     res.json(answer);
   });
 
+  app.get('/profile/:profile/full', checkProfile, findProfile, async (req, res) => {
+    if (!req.query.latex) {
+      res.sendStatus(400);
+      return;
+    }
+    res.send(req.profile.getDescription(req.query.latex));
+  });
+
   app.post('/profile/:profile/advice', checkProfile, findProfile, bodyParser.text(), async (req, res) => {
     if (!req.query.latex) {
       res.sendStatus(400);
