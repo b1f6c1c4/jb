@@ -22,7 +22,12 @@
         <% if (!l.format) { %>
         <div>
         <%   l.texts.forEach((g) => { %>
-        <%     if (g.length >= 100) { %>
+        <%     if (g.length >= 1000) { %>
+          <span>
+            <img class="pdf417" src="/pdf417?t=<%= url(g.substr(0, 512)) %>">
+            <img class="pdf417" src="/pdf417?t=<%= url(g.substr(512)) %>">
+          </span>
+        <%     } else if (g.length >= 100) { %>
           <span><img class="pdf417" src="/pdf417?t=<%= url(g) %>"></span>
         <%     } else { %>
           <span>

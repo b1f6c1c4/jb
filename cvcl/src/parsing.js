@@ -66,7 +66,8 @@ function parseKind(rawPortfolio, prefix, nm, single) {
   const barcodes = {};
 
   for (const entry of entries) {
-    const i = rawPortfolio.indexOf(entry) + entry.length;
+    const m = rawPortfolio.match(new RegExp(`(?<=^\\\\def)\\${entry}`,  'm'));
+    const i = m.index + m[0].length;
     let latex;
     if (!single) {
       latex = rawPortfolio.substr(i).match(/^[\s\S]+?\n\n/m)[0];
@@ -127,7 +128,7 @@ class Profile {
   }
 
   getCodes(latex) {
-    const result = [{ head: 'Default', lines: this.barcodes}];
+    const result = [{ head: 'Default', lines: this.barcodes }];
     for (const ll of latex.split('\n')) {
       for (const id in this.data) {
         const lines = this.data[id].barcodes[ll];
