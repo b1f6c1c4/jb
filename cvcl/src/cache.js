@@ -20,7 +20,7 @@ const ev = new EventEmitter();
 
 const mkJudgeCache = (prompt) => {
   const hash = createHash('md5');
-  const judgeDir = path.join(os.tmpdir(), 'cvcl_judge', hash.update(prompt).digest('hex'));
+  const judgeDir = path.join(__dirname, '..', 'cache', 'cvcl_judge', hash.update(prompt).digest('hex'));
   fs.mkdir(judgeDir, { recursive: true });
   return {
     async get(key) {
