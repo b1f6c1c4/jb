@@ -219,6 +219,16 @@ ${req.profile.getDescription(req.query.latex)}
     }
     const prompt = `You are a professional career advisor. You need to help a mentee to revise their resume, which was written in LaTeX. The mentee has politely requested you to: ${req.body.adj}. Output revised paragraph only. If the original paragraph was in bullet points (i.e. \\item), the output must also be in bullet points.
 
+Remember, a resume excerpt/subsection is great if:
+
+- uses fluent, excellent English writing with a diverse vocabulary
+- has at least three quantified, measurable metrics provided (however, do NOT make up factual data!)
+- start all bullet points with a strong, past-tense action verb (rather than empty words like "spearheaded"
+- discuss the meaningfulness and merits of their actions, going beyond what is actually done
+- has one sentence per bullet point, at least two bullet points in total
+- puts the most impressive bullet point appears first
+- not using plain, unattractive language, cliche, or extragavent vague words like "spearheaded"
+
 Original resume paragraph:
 \`\`\`latex
 ${req.body.doc.trim()}
