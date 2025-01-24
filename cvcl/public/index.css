@@ -246,10 +246,6 @@ nav select {
   mask-image: url(web/images/toolbarButton-presentationMode.svg);
 }
 
-#llm::before {
-  mask-image: url(web/images/annotation-newparagraph.svg);
-}
-
 #loading {
   display: inline-block;
   font-size: initial;

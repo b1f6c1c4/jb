@@ -1,14 +1,28 @@
-const profileFetch = fetch('/profile/').then((res) => res.json());
+let profile = window.localStorage.getItem('X-Profile');
+let profileData;
+let profiles;
 
-window.addEventListener('load', async () => {
-  const loading = document.querySelector('#loading');
-  const profileSelect = document.querySelector('select');
-  let profile = window.localStorage.getItem('X-Profile');
-  const profiles = await profileFetch;
+const profileFetch = fetch('/profile/').then(async (res) => {
+  profiles = await res.json();
   if (!profiles.includes(profile)) {
     profile = profiles[0];
     window.localStorage.setItem('X-Profile', profile);
   }
+  profileData = await (await fetch(`/profile/${profile}/entries`)).json();
+  if (!Array.isArray(profileData.sections))
+    profileData.sections = [];
+  profileData.sections.unshift(...Object.keys(profileData.knownSections));
+  profileData.sections.push(
+    '\\vspace{-1mm}',
+    '\\vspace{-2mm}',
+    '\\vspace{-3mm}',
+    '\\vspace{-4mm}');
+});
+
+window.addEventListener('load', async () => {
+  const loading = document.querySelector('#loading');
+  const profileSelect = document.querySelector('select');
+  await profileFetch;
   for (const p of profiles) {
     const el = document.createElement('option');
     el.value = p;
@@ -18,15 +32,6 @@ window.addEventListener('load', async () => {
     }
     profileSelect.appendChild(el);
   }
-  const profileData = await (await fetch(`/profile/${profile}/entries`)).json();
-  if (!Array.isArray(profileData.sections))
-    profileData.sections = [];
-  profileData.sections.unshift(...Object.keys(profileData.knownSections));
-  profileData.sections.push(
-    '\\vspace{-1mm}',
-    '\\vspace{-2mm}',
-    '\\vspace{-3mm}',
-    '\\vspace{-4mm}');
 
   profileSelect.addEventListener('change', (e) => {
     if (e.target.value === 'new') {
@@ -105,6 +110,27 @@ window.addEventListener('load', async () => {
   let asideOpen = true;
   window.addEventListener('message', (evt) => {
     if (typeof evt.data === 'object') {
+      if (evt.data.upload) {
+        const doc = evt.data.upload.replace(/^\\begin{document}/, '').split('\n');
+        for (const section of document.querySelectorAll('aside section')) {
+          const id = section.id;
+          const active = document.querySelector(`section#${id} > div > ul:first-child`);
+          active.innerHTML = '';
+          const nodes = [];
+          for (const el of document.querySelectorAll(`section#${id} > ul:nth-child(2) > li`)) {
+            el.classList.remove('selected');
+            let id;
+            if ((id = doc.indexOf(el.innerText)) !== -1) {
+              const e = el.cloneNode(true);
+              nodes[id] = e;
+              el.classList.add('selected');
+            }
+          }
+          nodes.forEach((e) => active.appendChild(e));
+        }
+        recompile();
+        return;
+      }
       editTarget(evt.data);
       return;
     }
