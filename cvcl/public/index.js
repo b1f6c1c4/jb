@@ -374,7 +374,7 @@ window.addEventListener('load', async () => {
   const editor = ace.edit('editor');
   window.editor = editor;
   editor.setKeyboardHandler('ace/keyboard/vim');
-  editor.session.setMode('ace/mode/latex');
+  editor.session.setMode('ace/mode/resume');
   editor.renderer.setShowGutter(false);
   document.querySelector('#edit').addEventListener('click', startEdit);
   document.querySelector('#llm').addEventListener('click', revise);
